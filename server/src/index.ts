@@ -3,6 +3,8 @@ import cors from 'cors'
 import helmet from 'helmet'
 import morgan from 'morgan'
 import { env } from './config/env'
+import { connectDatabase, prisma } from './config/database'
+import { logger } from './utils/logger'
 
 const app: Application = express()
 
@@ -25,13 +27,26 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 // Route de santé
-app.get('/health', (_req: Request, res: Response) => {
-  res.status(200).json({
-    status: 'OK',
-    message: 'Server is running',
-    environment: env.nodeEnv,
-    timestamp: new Date().toISOString(),
-  })
+app.get('/health', async (_req: Request, res: Response) => {
+  try {
+    // Test de la connexion à la base de données
+    await prisma.$queryRaw`SELECT 1`
+
+    res.status(200).json({
+      status: 'OK',
+      message: 'Server is running',
+      database: 'Connected',
+      environment: env.nodeEnv,
+      timestamp: new Date().toISOString(),
+    })
+  } catch (error) {
+    res.status(503).json({
+      status: 'ERROR',
+      message: 'Database connection failed',
+      environment: env.nodeEnv,
+      timestamp: new Date().toISOString(),
+    })
+  }
 })
 
 // Route de base
@@ -63,8 +78,14 @@ app.use((_req: Request, res: Response) => {
 // Démarrage du serveur
 const PORT = env.port
 
-app.listen(PORT, () => {
-  console.log(`
+const startServer = async () => {
+  try {
+    // Connexion à la base de données
+    await connectDatabase()
+
+    // Démarrage du serveur Express
+    app.listen(PORT, () => {
+      console.log(`
   ╔═══════════════════════════════════════╗
   ║  🚀 Serveur démarré avec succès       ║
   ║                                       ║
@@ -75,8 +96,16 @@ app.listen(PORT, () => {
   ║  ✅ TypeScript configuré              ║
   ║  ✅ Express configuré                 ║
   ║  ✅ Sécurité (Helmet + CORS)          ║
+  ║  ✅ PostgreSQL connecté               ║
   ╚═══════════════════════════════════════╝
-  `)
-})
+      `)
+    })
+  } catch (error) {
+    logger.error('Erreur lors du démarrage du serveur:', error)
+    process.exit(1)
+  }
+}
+
+startServer()
 
 export default app

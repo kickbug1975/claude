@@ -1,0 +1,146 @@
+// Configuration Prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Énumération des rôles utilisateurs
+enum Role {
+  ADMIN
+  SUPERVISEUR
+  MONTEUR
+}
+
+// Énumération des statuts de feuilles de travail
+enum StatutFeuille {
+  BROUILLON
+  SOUMIS
+  VALIDE
+  REJETE
+}
+
+// Énumération des types de frais
+enum TypeFrais {
+  TRANSPORT
+  MATERIEL
+  REPAS
+  AUTRES
+}
+
+// ============================================
+// MODÈLE: User (Utilisateurs)
+// ============================================
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      Role     @default(MONTEUR)
+  monteurId String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  monteur            Monteur?         @relation("UserMonteur", fields: [monteurId], references: [id], onDelete: SetNull)
+  feuillesValidees   FeuilleTravail[] @relation("FeuilleValidateur")
+
+  @@map("users")
+}
+
+// ============================================
+// MODÈLE: Monteur
+// ============================================
+model Monteur {
+  id                   String   @id @default(uuid())
+  nom                  String
+  prenom               String
+  telephone            String
+  email                String   @unique
+  adresse              String
+  dateEmbauche         DateTime
+  numeroIdentification String   @unique
+  actif                Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  // Relations
+  user            User?            @relation("UserMonteur")
+  feuillesTravail FeuilleTravail[]
+
+  @@map("monteurs")
+}
+
+// ============================================
+// MODÈLE: Chantier
+// ============================================
+model Chantier {
+  id          String    @id @default(uuid())
+  nom         String
+  adresse     String
+  client      String
+  reference   String    @unique
+  dateDebut   DateTime
+  dateFin     DateTime?
+  description String    @db.Text
+  actif       Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  feuillesTravail FeuilleTravail[]
+
+  @@map("chantiers")
+}
+
+// ============================================
+// MODÈLE: FeuilleTravail (Feuilles de travail)
+// ============================================
+model FeuilleTravail {
+  id                 String        @id @default(uuid())
+  monteurId          String
+  chantierId         String
+  dateTravail        DateTime
+  dateSaisie         DateTime      @default(now())
+  heureDebut         String
+  heureFin           String
+  heuresTotales      Float
+  descriptionTravail String        @db.Text
+  statut             StatutFeuille @default(BROUILLON)
+  valideParId        String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  // Relations
+  monteur   Monteur   @relation(fields: [monteurId], references: [id], onDelete: Cascade)
+  chantier  Chantier  @relation(fields: [chantierId], references: [id], onDelete: Cascade)
+  validePar User?     @relation("FeuilleValidateur", fields: [valideParId], references: [id], onDelete: SetNull)
+  frais     Frais[]
+
+  @@index([monteurId])
+  @@index([chantierId])
+  @@index([dateTravail])
+  @@index([statut])
+  @@map("feuilles_travail")
+}
+
+// ============================================
+// MODÈLE: Frais
+// ============================================
+model Frais {
+  id            String     @id @default(uuid())
+  feuilleId     String
+  typeFrais     TypeFrais
+  montant       Float
+  description   String
+  fichierProuve String?
+  createdAt     DateTime   @default(now())
+
+  // Relations
+  feuille FeuilleTravail @relation(fields: [feuilleId], references: [id], onDelete: Cascade)
+
+  @@index([feuilleId])
+  @@map("frais")
+}
