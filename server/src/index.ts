@@ -5,6 +5,10 @@ import morgan from 'morgan'
 import { env } from './config/env'
 import { connectDatabase, prisma } from './config/database'
 import { logger } from './utils/logger'
+import authRoutes from './routes/authRoutes'
+import monteurRoutes from './routes/monteurRoutes'
+import chantierRoutes from './routes/chantierRoutes'
+import feuilleRoutes from './routes/feuilleRoutes'
 
 const app: Application = express()
 
@@ -61,11 +65,11 @@ app.get('/', (_req: Request, res: Response) => {
   })
 })
 
-// Routes API (à implémenter)
-// app.use('/api/auth', authRoutes)
-// app.use('/api/monteurs', monteurRoutes)
-// app.use('/api/chantiers', chantierRoutes)
-// app.use('/api/feuilles', feuilleRoutes)
+// Routes API
+app.use('/api/auth', authRoutes)
+app.use('/api/monteurs', monteurRoutes)
+app.use('/api/chantiers', chantierRoutes)
+app.use('/api/feuilles', feuilleRoutes)
 
 // Gestion des erreurs 404
 app.use((_req: Request, res: Response) => {

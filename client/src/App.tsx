@@ -1,30 +1,65 @@
-import { BrowserRouter as Router } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { useAuthStore } from './store/authStore'
+import { ProtectedRoute } from './components/ProtectedRoute'
+import { Layout } from './components/Layout'
+import { Login } from './pages/Login'
+import { Dashboard } from './pages/Dashboard'
+import { Feuilles } from './pages/Feuilles'
+import { Monteurs } from './pages/Monteurs'
+import { Chantiers } from './pages/Chantiers'
+import { Unauthorized } from './pages/Unauthorized'
 
 function App() {
+  const { checkAuth, isAuthenticated } = useAuthStore()
+
+  useEffect(() => {
+    checkAuth()
+  }, [checkAuth])
+
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50">
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-primary-600 mb-4">
-              Gestion des Feuilles de Travail
-            </h1>
-            <p className="text-gray-600 text-lg">
-              Application de maintenance - Configuration réussie ✅
-            </p>
-            <div className="mt-8 p-6 bg-white rounded-lg shadow-md max-w-md mx-auto">
-              <h2 className="text-xl font-semibold mb-3 text-gray-800">Prochaines étapes</h2>
-              <ul className="text-left text-gray-600 space-y-2">
-                <li>✅ React + TypeScript configuré</li>
-                <li>✅ Tailwind CSS installé</li>
-                <li>✅ ESLint + Prettier configurés</li>
-                <li>⏳ Configuration de la base de données</li>
-                <li>⏳ Authentification JWT</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Routes>
+        {/* Public routes */}
+        <Route
+          path="/login"
+          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />}
+        />
+        <Route path="/unauthorized" element={<Unauthorized />} />
+
+        {/* Protected routes */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="feuilles" element={<Feuilles />} />
+          <Route
+            path="monteurs"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'SUPERVISEUR']}>
+                <Monteurs />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="chantiers"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'SUPERVISEUR']}>
+                <Chantiers />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
+
+        {/* Catch all */}
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
     </Router>
   )
 }
