@@ -121,14 +121,16 @@ export const Login = () => {
             </button>
           </form>
 
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600 font-medium mb-2">Comptes de test :</p>
-            <ul className="text-xs text-gray-500 space-y-1">
-              <li><strong>Admin:</strong> admin@maintenance.com / Admin123!</li>
-              <li><strong>Superviseur:</strong> superviseur@maintenance.com / Superviseur123!</li>
-              <li><strong>Monteur:</strong> jean.dupont@maintenance.com / Monteur123!</li>
-            </ul>
-          </div>
+          {import.meta.env.DEV && (
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600 font-medium mb-2">Comptes de test :</p>
+              <ul className="text-xs text-gray-500 space-y-1">
+                <li><strong>Admin:</strong> admin@maintenance.com / Admin123!</li>
+                <li><strong>Superviseur:</strong> superviseur@maintenance.com / Superviseur123!</li>
+                <li><strong>Monteur:</strong> jean.dupont@maintenance.com / Monteur123!</li>
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </div>

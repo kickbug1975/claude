@@ -9,14 +9,15 @@ declare global {
   }
 }
 
-export const authenticate = (req: Request, res: Response, next: NextFunction) => {
+export const authenticate = (req: Request, res: Response, next: NextFunction): void => {
   const authHeader = req.headers.authorization
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({
+    res.status(401).json({
       success: false,
       message: 'Token manquant ou invalide',
     })
+    return
   }
 
   const token = authHeader.split(' ')[1]
@@ -25,8 +26,8 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
     const decoded = verifyToken(token)
     req.user = decoded
     next()
-  } catch (error) {
-    return res.status(401).json({
+  } catch {
+    res.status(401).json({
       success: false,
       message: 'Token invalide ou expiré',
     })
@@ -34,19 +35,21 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
 }
 
 export const authorize = (...roles: string[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         message: 'Non authentifié',
       })
+      return
     }
 
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({
+      res.status(403).json({
         success: false,
         message: 'Accès non autorisé pour ce rôle',
       })
+      return
     }
 
     next()

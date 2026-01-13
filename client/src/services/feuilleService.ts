@@ -1,5 +1,5 @@
 import api from './api'
-import { FeuilleTravail, Frais } from '../types'
+import { FeuilleTravail, Frais, PaginatedResponse } from '../types'
 
 interface FeuilleFilters {
   statut?: string
@@ -7,11 +7,23 @@ interface FeuilleFilters {
   chantierId?: string
   dateDebut?: string
   dateFin?: string
+  page?: number
+  limit?: number
 }
 
 export const feuilleService = {
   getAll: async (filters?: FeuilleFilters) => {
     const response = await api.get('/feuilles', { params: filters })
+
+    // Support nouveau format paginé
+    if (response.data.pagination) {
+      return {
+        data: response.data.data,
+        pagination: response.data.pagination,
+      } as PaginatedResponse<FeuilleTravail>
+    }
+
+    // Fallback ancien format pour compatibilité
     return response.data.data as FeuilleTravail[]
   },
 

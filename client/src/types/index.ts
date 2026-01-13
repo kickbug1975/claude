@@ -54,6 +54,7 @@ export interface FeuilleTravail {
   monteur?: Monteur
   chantier?: Chantier
   frais?: Frais[]
+  fichiers?: Fichier[]
 }
 
 export interface Frais {
@@ -66,6 +67,20 @@ export interface Frais {
   createdAt: string
 }
 
+export interface Fichier {
+  id: string
+  feuilleId?: string
+  nom: string
+  cle: string
+  url: string
+  mimeType: string
+  taille: number
+  description?: string
+  downloadUrl?: string
+  createdAt: string
+  updatedAt: string
+}
+
 export interface AuthResponse {
   user: User
   token: string
@@ -75,4 +90,16 @@ export interface ApiError {
   message: string
   statusCode: number
   errors?: Record<string, string[]>
+}
+
+export interface PaginationMeta {
+  page: number
+  pageSize: number
+  total: number
+  totalPages: number
+}
+
+export interface PaginatedResponse<T> {
+  data: T[]
+  pagination: PaginationMeta
 }

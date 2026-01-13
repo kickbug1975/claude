@@ -1,6 +1,8 @@
 import { Request, Response } from 'express'
 import { prisma } from '../config/database'
 import { z } from 'zod'
+import { logger } from '../utils/logger'
+import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination'
 
 const chantierSchema = z.object({
   nom: z.string().min(1, 'Nom requis'),
@@ -16,20 +18,30 @@ const chantierSchema = z.object({
 export const getAllChantiers = async (req: Request, res: Response) => {
   try {
     const { actif } = req.query
+    const { page, limit, skip } = getPaginationParams(req.query)
 
     const where = actif !== undefined ? { actif: actif === 'true' } : {}
 
+    // Compter le total avec le même where
+    const total = await prisma.chantier.count({ where })
+
+    // Récupérer les chantiers paginés
     const chantiers = await prisma.chantier.findMany({
       where,
       orderBy: { dateDebut: 'desc' },
+      skip,
+      take: limit,
     })
+
+    // Construire la réponse paginée
+    const response = buildPaginatedResponse(chantiers, total, page, limit)
 
     return res.status(200).json({
       success: true,
-      data: chantiers,
+      ...response,
     })
   } catch (error) {
-    console.error('Erreur getAllChantiers:', error)
+    logger.error('Erreur getAllChantiers', error instanceof Error ? error : undefined)
     return res.status(500).json({
       success: false,
       message: 'Erreur serveur',
@@ -66,7 +78,7 @@ export const getChantierById = async (req: Request, res: Response) => {
       data: chantier,
     })
   } catch (error) {
-    console.error('Erreur getChantierById:', error)
+    logger.error('Erreur getChantierById', error instanceof Error ? error : undefined)
     return res.status(500).json({
       success: false,
       message: 'Erreur serveur',
@@ -110,7 +122,7 @@ export const createChantier = async (req: Request, res: Response) => {
       data: chantier,
     })
   } catch (error) {
-    console.error('Erreur createChantier:', error)
+    logger.error('Erreur createChantier', error instanceof Error ? error : undefined)
     return res.status(500).json({
       success: false,
       message: 'Erreur serveur',
@@ -153,7 +165,7 @@ export const updateChantier = async (req: Request, res: Response) => {
       data: chantier,
     })
   } catch (error) {
-    console.error('Erreur updateChantier:', error)
+    logger.error('Erreur updateChantier', error instanceof Error ? error : undefined)
     return res.status(500).json({
       success: false,
       message: 'Erreur serveur',
@@ -185,7 +197,7 @@ export const deleteChantier = async (req: Request, res: Response) => {
       message: 'Chantier supprimé avec succès',
     })
   } catch (error) {
-    console.error('Erreur deleteChantier:', error)
+    logger.error('Erreur deleteChantier', error instanceof Error ? error : undefined)
     return res.status(500).json({
       success: false,
       message: 'Erreur serveur',
@@ -226,7 +238,7 @@ export const getChantierStats = async (req: Request, res: Response) => {
       },
     })
   } catch (error) {
-    console.error('Erreur getChantierStats:', error)
+    logger.error('Erreur getChantierStats', error instanceof Error ? error : undefined)
     return res.status(500).json({
       success: false,
       message: 'Erreur serveur',

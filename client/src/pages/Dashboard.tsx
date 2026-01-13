@@ -66,11 +66,17 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [monteursData, chantiersData, feuillesData] = await Promise.all([
+        const [monteursResult, chantiersResult, feuillesResult] = await Promise.all([
           monteurService.getAll(),
           chantierService.getAll(),
           feuilleService.getAll(),
         ])
+
+        // Gérer la réponse paginée ou non
+        const monteursData = 'pagination' in monteursResult ? monteursResult.data : monteursResult
+        const chantiersData = 'pagination' in chantiersResult ? chantiersResult.data : chantiersResult
+        const feuillesData = 'pagination' in feuillesResult ? feuillesResult.data : feuillesResult
+
         setMonteurs(monteursData)
         setChantiers(chantiersData)
         setFeuilles(feuillesData)
@@ -180,7 +186,8 @@ const SuperviseurDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await feuilleService.getAll()
+        const result = await feuilleService.getAll()
+        const data = 'pagination' in result ? result.data : result
         setFeuilles(data)
       } catch (error) {
         console.error('Erreur chargement feuilles:', error)
@@ -311,7 +318,8 @@ const MonteurDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await feuilleService.getAll()
+        const result = await feuilleService.getAll()
+        const data = 'pagination' in result ? result.data : result
         setFeuilles(data)
       } catch (error) {
         console.error('Erreur chargement feuilles:', error)

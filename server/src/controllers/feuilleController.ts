@@ -1,6 +1,9 @@
 import { Request, Response } from 'express'
 import { prisma } from '../config/database'
 import { z } from 'zod'
+import { emailService, FeuilleEmailData } from '../services/emailService'
+import { logger } from '../utils/logger'
+import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination'
 
 const fraisSchema = z.object({
   typeFrais: z.enum(['TRANSPORT', 'MATERIEL', 'REPAS', 'AUTRES']),
@@ -30,6 +33,7 @@ const calculateHours = (heureDebut: string, heureFin: string): number => {
 export const getAllFeuilles = async (req: Request, res: Response) => {
   try {
     const { statut, monteurId, chantierId, dateDebut, dateFin } = req.query
+    const { page, limit, skip } = getPaginationParams(req.query)
     const user = req.user!
 
     const where: any = {}
@@ -55,9 +59,15 @@ export const getAllFeuilles = async (req: Request, res: Response) => {
       if (dateFin) where.dateTravail.lte = new Date(dateFin as string)
     }
 
+    // Compter le total avec le même where
+    const total = await prisma.feuilleTravail.count({ where })
+
+    // Récupérer les feuilles paginées
     const feuilles = await prisma.feuilleTravail.findMany({
       where,
       orderBy: { dateTravail: 'desc' },
+      skip,
+      take: limit,
       include: {
         monteur: { select: { nom: true, prenom: true, numeroIdentification: true } },
         chantier: { select: { nom: true, reference: true } },
@@ -66,12 +76,15 @@ export const getAllFeuilles = async (req: Request, res: Response) => {
       },
     })
 
+    // Construire la réponse paginée
+    const response = buildPaginatedResponse(feuilles, total, page, limit)
+
     return res.status(200).json({
       success: true,
-      data: feuilles,
+      ...response,
     })
   } catch (error) {
-    console.error('Erreur getAllFeuilles:', error)
+    logger.error('Erreur getAllFeuilles', error instanceof Error ? error : undefined)
     return res.status(500).json({
       success: false,
       message: 'Erreur serveur',
@@ -105,7 +118,7 @@ export const getFeuilleById = async (req: Request, res: Response) => {
       data: feuille,
     })
   } catch (error) {
-    console.error('Erreur getFeuilleById:', error)
+    logger.error('Erreur getFeuilleById', error instanceof Error ? error : undefined)
     return res.status(500).json({
       success: false,
       message: 'Erreur serveur',
@@ -182,7 +195,7 @@ export const createFeuille = async (req: Request, res: Response) => {
       data: feuille,
     })
   } catch (error) {
-    console.error('Erreur createFeuille:', error)
+    logger.error('Erreur createFeuille', error instanceof Error ? error : undefined)
     return res.status(500).json({
       success: false,
       message: 'Erreur serveur',
@@ -251,7 +264,7 @@ export const updateFeuille = async (req: Request, res: Response) => {
       data: feuille,
     })
   } catch (error) {
-    console.error('Erreur updateFeuille:', error)
+    logger.error('Erreur updateFeuille', error instanceof Error ? error : undefined)
     return res.status(500).json({
       success: false,
       message: 'Erreur serveur',
@@ -283,7 +296,7 @@ export const deleteFeuille = async (req: Request, res: Response) => {
       message: 'Feuille de travail supprimée avec succès',
     })
   } catch (error) {
-    console.error('Erreur deleteFeuille:', error)
+    logger.error('Erreur deleteFeuille', error instanceof Error ? error : undefined)
     return res.status(500).json({
       success: false,
       message: 'Erreur serveur',
@@ -297,6 +310,11 @@ export const submitFeuille = async (req: Request, res: Response) => {
 
     const feuille = await prisma.feuilleTravail.findUnique({
       where: { id },
+      include: {
+        monteur: true,
+        chantier: true,
+        frais: true,
+      },
     })
 
     if (!feuille) {
@@ -322,13 +340,43 @@ export const submitFeuille = async (req: Request, res: Response) => {
       },
     })
 
+    // Envoi des notifications email
+    try {
+      const totalFrais = feuille.frais.reduce((acc: number, f: { montant: number }) => acc + f.montant, 0)
+      const emailData: FeuilleEmailData = {
+        id: feuille.id,
+        monteurNom: feuille.monteur.nom,
+        monteurPrenom: feuille.monteur.prenom,
+        monteurEmail: feuille.monteur.email,
+        chantierNom: feuille.chantier.nom,
+        chantierReference: feuille.chantier.reference,
+        dateTravail: feuille.dateTravail,
+        heureDebut: feuille.heureDebut,
+        heureFin: feuille.heureFin,
+        heuresTotales: feuille.heuresTotales,
+        descriptionTravail: feuille.descriptionTravail,
+        totalFrais: totalFrais > 0 ? totalFrais : undefined,
+      }
+
+      // Recuperer les superviseurs et admins
+      const superviseurs = await prisma.user.findMany({
+        where: { role: { in: ['ADMIN', 'SUPERVISEUR'] } },
+        select: { email: true },
+      })
+
+      await emailService.notifySubmission(emailData, superviseurs)
+    } catch (emailError) {
+      logger.error('Erreur envoi email soumission', emailError instanceof Error ? emailError : undefined)
+      // On ne bloque pas la soumission si l'email echoue
+    }
+
     return res.status(200).json({
       success: true,
       message: 'Feuille de travail soumise avec succès',
       data: updatedFeuille,
     })
   } catch (error) {
-    console.error('Erreur submitFeuille:', error)
+    logger.error('Erreur submitFeuille', error instanceof Error ? error : undefined)
     return res.status(500).json({
       success: false,
       message: 'Erreur serveur',
@@ -343,6 +391,10 @@ export const validateFeuille = async (req: Request, res: Response) => {
 
     const feuille = await prisma.feuilleTravail.findUnique({
       where: { id },
+      include: {
+        monteur: true,
+        chantier: true,
+      },
     })
 
     if (!feuille) {
@@ -372,13 +424,39 @@ export const validateFeuille = async (req: Request, res: Response) => {
       },
     })
 
+    // Envoi de la notification email au monteur
+    try {
+      const validateur = await prisma.user.findUnique({
+        where: { id: user.userId },
+        select: { email: true },
+      })
+
+      const emailData: FeuilleEmailData = {
+        id: feuille.id,
+        monteurNom: feuille.monteur.nom,
+        monteurPrenom: feuille.monteur.prenom,
+        monteurEmail: feuille.monteur.email,
+        chantierNom: feuille.chantier.nom,
+        chantierReference: feuille.chantier.reference,
+        dateTravail: feuille.dateTravail,
+        heureDebut: feuille.heureDebut,
+        heureFin: feuille.heureFin,
+        heuresTotales: feuille.heuresTotales,
+        descriptionTravail: feuille.descriptionTravail,
+      }
+
+      await emailService.notifyValidation(emailData, validateur?.email || 'Superviseur')
+    } catch (emailError) {
+      logger.error('Erreur envoi email validation', emailError instanceof Error ? emailError : undefined)
+    }
+
     return res.status(200).json({
       success: true,
       message: 'Feuille de travail validée avec succès',
       data: updatedFeuille,
     })
   } catch (error) {
-    console.error('Erreur validateFeuille:', error)
+    logger.error('Erreur validateFeuille', error instanceof Error ? error : undefined)
     return res.status(500).json({
       success: false,
       message: 'Erreur serveur',
@@ -389,10 +467,15 @@ export const validateFeuille = async (req: Request, res: Response) => {
 export const rejectFeuille = async (req: Request, res: Response) => {
   try {
     const { id } = req.params
+    const { motif } = req.body // Motif optionnel de rejet
     const user = req.user!
 
     const feuille = await prisma.feuilleTravail.findUnique({
       where: { id },
+      include: {
+        monteur: true,
+        chantier: true,
+      },
     })
 
     if (!feuille) {
@@ -422,13 +505,39 @@ export const rejectFeuille = async (req: Request, res: Response) => {
       },
     })
 
+    // Envoi de la notification email au monteur
+    try {
+      const rejeteur = await prisma.user.findUnique({
+        where: { id: user.userId },
+        select: { email: true },
+      })
+
+      const emailData: FeuilleEmailData = {
+        id: feuille.id,
+        monteurNom: feuille.monteur.nom,
+        monteurPrenom: feuille.monteur.prenom,
+        monteurEmail: feuille.monteur.email,
+        chantierNom: feuille.chantier.nom,
+        chantierReference: feuille.chantier.reference,
+        dateTravail: feuille.dateTravail,
+        heureDebut: feuille.heureDebut,
+        heureFin: feuille.heureFin,
+        heuresTotales: feuille.heuresTotales,
+        descriptionTravail: feuille.descriptionTravail,
+      }
+
+      await emailService.notifyRejection(emailData, rejeteur?.email || 'Superviseur', motif)
+    } catch (emailError) {
+      logger.error('Erreur envoi email rejet', emailError instanceof Error ? emailError : undefined)
+    }
+
     return res.status(200).json({
       success: true,
       message: 'Feuille de travail rejetée',
       data: updatedFeuille,
     })
   } catch (error) {
-    console.error('Erreur rejectFeuille:', error)
+    logger.error('Erreur rejectFeuille', error instanceof Error ? error : undefined)
     return res.status(500).json({
       success: false,
       message: 'Erreur serveur',
@@ -481,7 +590,7 @@ export const addFrais = async (req: Request, res: Response) => {
       data: frais,
     })
   } catch (error) {
-    console.error('Erreur addFrais:', error)
+    logger.error('Erreur addFrais', error instanceof Error ? error : undefined)
     return res.status(500).json({
       success: false,
       message: 'Erreur serveur',
@@ -521,7 +630,7 @@ export const deleteFrais = async (req: Request, res: Response) => {
       message: 'Frais supprimé avec succès',
     })
   } catch (error) {
-    console.error('Erreur deleteFrais:', error)
+    logger.error('Erreur deleteFrais', error instanceof Error ? error : undefined)
     return res.status(500).json({
       success: false,
       message: 'Erreur serveur',

@@ -8,9 +8,8 @@ export interface TokenPayload {
 }
 
 export const generateToken = (payload: TokenPayload): string => {
-  return jwt.sign(payload, env.jwtSecret, {
-    expiresIn: env.jwtExpiresIn,
-  })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return jwt.sign(payload, env.jwtSecret, { expiresIn: env.jwtExpiresIn } as any)
 }
 
 export const verifyToken = (token: string): TokenPayload => {

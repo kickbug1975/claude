@@ -36,3 +36,4 @@ coverage/
 *.pid
 *.seed
 *.pid.lock
+logs/

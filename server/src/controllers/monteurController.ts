@@ -1,6 +1,8 @@
 import { Request, Response } from 'express'
 import { prisma } from '../config/database'
 import { z } from 'zod'
+import { logger } from '../utils/logger'
+import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination'
 
 const monteurSchema = z.object({
   nom: z.string().min(1, 'Nom requis'),
@@ -16,12 +18,19 @@ const monteurSchema = z.object({
 export const getAllMonteurs = async (req: Request, res: Response) => {
   try {
     const { actif } = req.query
+    const { page, limit, skip } = getPaginationParams(req.query)
 
     const where = actif !== undefined ? { actif: actif === 'true' } : {}
 
+    // Compter le total avec le même where
+    const total = await prisma.monteur.count({ where })
+
+    // Récupérer les monteurs paginés
     const monteurs = await prisma.monteur.findMany({
       where,
       orderBy: { nom: 'asc' },
+      skip,
+      take: limit,
       include: {
         user: {
           select: { id: true, email: true, role: true },
@@ -29,12 +38,15 @@ export const getAllMonteurs = async (req: Request, res: Response) => {
       },
     })
 
+    // Construire la réponse paginée
+    const response = buildPaginatedResponse(monteurs, total, page, limit)
+
     return res.status(200).json({
       success: true,
-      data: monteurs,
+      ...response,
     })
   } catch (error) {
-    console.error('Erreur getAllMonteurs:', error)
+    logger.error('Erreur getAllMonteurs', error instanceof Error ? error : undefined)
     return res.status(500).json({
       success: false,
       message: 'Erreur serveur',
@@ -74,7 +86,7 @@ export const getMonteurById = async (req: Request, res: Response) => {
       data: monteur,
     })
   } catch (error) {
-    console.error('Erreur getMonteurById:', error)
+    logger.error('Erreur getMonteurById', error instanceof Error ? error : undefined)
     return res.status(500).json({
       success: false,
       message: 'Erreur serveur',
@@ -130,7 +142,7 @@ export const createMonteur = async (req: Request, res: Response) => {
       data: monteur,
     })
   } catch (error) {
-    console.error('Erreur createMonteur:', error)
+    logger.error('Erreur createMonteur', error instanceof Error ? error : undefined)
     return res.status(500).json({
       success: false,
       message: 'Erreur serveur',
@@ -173,7 +185,7 @@ export const updateMonteur = async (req: Request, res: Response) => {
       data: monteur,
     })
   } catch (error) {
-    console.error('Erreur updateMonteur:', error)
+    logger.error('Erreur updateMonteur', error instanceof Error ? error : undefined)
     return res.status(500).json({
       success: false,
       message: 'Erreur serveur',
@@ -205,7 +217,7 @@ export const deleteMonteur = async (req: Request, res: Response) => {
       message: 'Monteur supprimé avec succès',
     })
   } catch (error) {
-    console.error('Erreur deleteMonteur:', error)
+    logger.error('Erreur deleteMonteur', error instanceof Error ? error : undefined)
     return res.status(500).json({
       success: false,
       message: 'Erreur serveur',
@@ -259,7 +271,7 @@ export const getMonteurStats = async (req: Request, res: Response) => {
       },
     })
   } catch (error) {
-    console.error('Erreur getMonteurStats:', error)
+    logger.error('Erreur getMonteurStats', error instanceof Error ? error : undefined)
     return res.status(500).json({
       success: false,
       message: 'Erreur serveur',

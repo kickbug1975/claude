@@ -3,6 +3,8 @@ import { useEffect } from 'react'
 import { useAuthStore } from './store/authStore'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Layout } from './components/Layout'
+import { ToastProvider } from './components/Toast'
+import { fetchCsrfToken } from './services/api'
 import { Login } from './pages/Login'
 import { Dashboard } from './pages/Dashboard'
 import { Feuilles } from './pages/Feuilles'
@@ -14,10 +16,16 @@ function App() {
   const { checkAuth, isAuthenticated } = useAuthStore()
 
   useEffect(() => {
+    // Initialiser le token CSRF au démarrage
+    fetchCsrfToken().catch((error) => {
+      console.error('Erreur lors de l\'initialisation du token CSRF:', error)
+    })
+
     checkAuth()
   }, [checkAuth])
 
   return (
+    <ToastProvider>
     <Router>
       <Routes>
         {/* Public routes */}
@@ -61,6 +69,7 @@ function App() {
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </Router>
+    </ToastProvider>
   )
 }
 
