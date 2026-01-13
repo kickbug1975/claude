@@ -2,16 +2,23 @@
 node_modules/
 client/node_modules/
 server/node_modules/
+*/node_modules/
 
 # Build outputs
 dist/
 build/
+*/dist/
+*/build/
+.vite/
+*/.vite/
 *.tsbuildinfo
 
 # Environment files
 .env
 .env.local
 .env.*.local
+*/.env
+*/.env.local
 
 # IDE
 .vscode/
@@ -33,6 +40,16 @@ npm-debug.log*
 tmp/
 temp/
 *.tmp
+
+# Misc
+*.pid
+*.seed
+*.pid.lock
+.cache
+
+# Temporary/Debug files
+generate-prisma-mock.js
+**/generate-prisma-mock.js
 
 # Application directories (code is on maintenance branch)
 client/
