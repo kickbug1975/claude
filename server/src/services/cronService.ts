@@ -375,10 +375,24 @@ export const runJobManually = async (name: string) => {
   const job = jobs.find((j) => j.name === name)
   if (job) {
     logger.info(`[CRON] Exécution manuelle: ${name}`)
-    await job.task()
-    return true
+    try {
+      await job.task()
+      return true
+    } catch (error) {
+      logger.error(`[CRON] Erreur exécution manuelle ${name}:`, error)
+      return true // On retourne true car le job a été trouvé et tenté
+    }
   }
   return false
+}
+
+/**
+ * Réinitialiser l'état des jobs (pour les tests)
+ */
+export const resetJobsState = () => {
+  jobs.forEach((j) => {
+    j.enabled = true
+  })
 }
 
 export default {

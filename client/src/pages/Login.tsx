@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useAuthStore } from '../store/authStore'
 import { Eye, EyeOff, LogIn, Loader2 } from 'lucide-react'
@@ -62,9 +62,8 @@ export const Login = () => {
                     message: 'Email invalide',
                   },
                 })}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.email ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 placeholder="votre@email.com"
               />
               {errors.email && (
@@ -84,9 +83,8 @@ export const Login = () => {
                   {...register('password', {
                     required: 'Mot de passe requis',
                   })}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10 ${
-                    errors.password ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10 ${errors.password ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="Votre mot de passe"
                 />
                 <button
@@ -96,6 +94,11 @@ export const Login = () => {
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
+              </div>
+              <div className="mt-1 text-right">
+                <Link to="/forgot-password" className="text-xs text-blue-600 hover:text-blue-800 transition-colors">
+                  Mot de passe oublié ?
+                </Link>
               </div>
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>

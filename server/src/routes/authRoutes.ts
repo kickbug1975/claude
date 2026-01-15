@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { login, register, me, refresh, logout, logoutAll } from '../controllers/authController'
+import { login, register, me, refresh, logout, logoutAll, forgotPassword, resetPassword, changePassword } from '../controllers/authController'
 import { authenticate } from '../middlewares/auth'
 
 const router = Router()
@@ -226,5 +226,62 @@ router.post('/logout', logout)
  *         $ref: '#/components/responses/UnauthorizedError'
  */
 router.post('/logout-all', authenticate, logoutAll)
+
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     summary: Demander la réinitialisation du mot de passe
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email: { type: string, format: email }
+ */
+router.post('/forgot-password', forgotPassword)
+
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     summary: Réinitialiser le mot de passe avec un token
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [token, password]
+ *             properties:
+ *               token: { type: string }
+ *               password: { type: string, minLength: 8 }
+ */
+router.post('/reset-password', resetPassword)
+
+/**
+ * @swagger
+ * /api/auth/change-password:
+ *   post:
+ *     summary: Changer le mot de passe (connecté)
+ *     tags: [Auth]
+ *     security: [{ bearerAuth: [] }]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [oldPassword, newPassword]
+ *             properties:
+ *               oldPassword: { type: string }
+ *               newPassword: { type: string, minLength: 8 }
+ */
+router.post('/change-password', authenticate, changePassword)
 
 export default router

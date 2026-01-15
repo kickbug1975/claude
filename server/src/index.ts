@@ -12,12 +12,14 @@ import { logger, morganStream } from './utils/logger'
 import { errorHandler } from './middlewares/errorHandler'
 import { csrfProtection, generateCsrfToken, csrfErrorHandler } from './middlewares/csrf'
 import authRoutes from './routes/authRoutes'
+import userRoutes from './routes/userRoutes'
 import monteurRoutes from './routes/monteurRoutes'
 import chantierRoutes from './routes/chantierRoutes'
 import feuilleRoutes from './routes/feuilleRoutes'
 import fichierRoutes from './routes/fichierRoutes'
 import cronRoutes from './routes/cronRoutes'
 import { startCronJobs } from './services/cronService'
+import { verifyEmailConfig } from './services/emailService'
 
 const app: Application = express()
 
@@ -72,8 +74,10 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 })
 
-// Appliquer le rate limiting global
-app.use('/api', limiter)
+// Appliquer le rate limiting global (sauf en test)
+if (env.nodeEnv !== 'test') {
+  app.use('/api', limiter)
+}
 
 // Logging HTTP avec Morgan + Winston
 if (env.nodeEnv === 'development') {
@@ -168,11 +172,15 @@ app.get('/api-docs.json', (_req: Request, res: Response) => {
 // Servir les fichiers uploadés localement (fallback si S3 non configuré)
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
 
-// Protection CSRF pour toutes les routes API (sauf GET/HEAD/OPTIONS)
-app.use('/api', csrfProtection)
+// Protection CSRF pour toutes les routes API (sauf GET/HEAD/OPTIONS et sauf en test)
+if (env.nodeEnv !== 'test') {
+  app.use('/api', csrfProtection)
+}
 
 // Routes API
-app.use('/api/auth', authLimiter, authRoutes)
+const authMiddlewares = env.nodeEnv === 'test' ? [] : [authLimiter]
+app.use('/api/auth', ...authMiddlewares, authRoutes)
+app.use('/api/users', userRoutes)
 app.use('/api/monteurs', monteurRoutes)
 app.use('/api/chantiers', chantierRoutes)
 app.use('/api/feuilles', feuilleRoutes)
@@ -220,6 +228,9 @@ const startServer = async () => {
   ╚═══════════════════════════════════════╝
       `)
 
+      // Vérifier la configuration email au démarrage
+      verifyEmailConfig()
+
       // Démarrer les tâches planifiées
       startCronJobs()
     })
@@ -229,6 +240,9 @@ const startServer = async () => {
   }
 }
 
-startServer()
+if (require.main === module) {
+  startServer()
+}
 
 export default app
+

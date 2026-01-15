@@ -3,7 +3,8 @@ import { env } from '../config/env'
 import { logger } from '../utils/logger'
 
 // Configuration du transporteur
-const transporter = nodemailer.createTransport({
+// Transporteur global (sera (ré)initialisé si besoin)
+let transporter = nodemailer.createTransport({
   host: env.smtp.host,
   port: env.smtp.port,
   secure: env.smtp.port === 465,
@@ -13,9 +14,38 @@ const transporter = nodemailer.createTransport({
   },
 })
 
+// Fonction pour initialiser Ethereal Email (développement/test)
+const useEthereal = async () => {
+  try {
+    const testAccount = await nodemailer.createTestAccount()
+    transporter = nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      secure: false,
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass,
+      },
+    })
+    logger.info('--- CONFIGURATION ETHEREAL EMAIL ACTIVÉE (Fallback) ---')
+    logger.info(`Utilisateur: ${testAccount.user}`)
+    logger.info(`Mot de passe: ${testAccount.pass}`)
+    return true
+  } catch (error) {
+    logger.error('Impossible de configurer Ethereal Email:', error)
+    return false
+  }
+}
+
 // Verifier la configuration au demarrage
 export const verifyEmailConfig = async (): Promise<boolean> => {
-  if (!env.smtp.user || !env.smtp.password) {
+  const isGmailConfigured = !!(env.smtp.user && env.smtp.password)
+
+  if (!isGmailConfigured) {
+    if (env.nodeEnv !== 'production') {
+      logger.info('Configuration SMTP manquante, tentative avec Ethereal...')
+      return useEthereal()
+    }
     logger.warn('Configuration SMTP incomplete - les emails sont desactives')
     return false
   }
@@ -25,6 +55,10 @@ export const verifyEmailConfig = async (): Promise<boolean> => {
     logger.info('Service email configure et pret')
     return true
   } catch (error) {
+    if (env.nodeEnv !== 'production') {
+      logger.warn('SMTP configuré mais invalide (probablement Gmail 535), bascule vers Ethereal...')
+      return useEthereal()
+    }
     logger.warn('Service email non disponible', { error })
     return false
   }
@@ -100,6 +134,27 @@ const baseTemplate = (content: string, title: string): string => `
 </body>
 </html>
 `
+
+// Template pour réinitialisation de mot de passe
+const passwordResetTemplate = (email: string, resetUrl: string): string => {
+  const content = `
+    <div class="header">
+      <h1>Reinitialisation de mot de passe</h1>
+    </div>
+    <div class="content">
+      <p>Bonjour,</p>
+      <p>Vous avez demande la reinitialisation de votre mot de passe pour votre compte <strong>${email}</strong>.</p>
+      <p>Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe. Ce lien est valable pendant 1 heure.</p>
+      
+      <p style="text-align: center;">
+        <a href="${resetUrl}" class="btn">Reinitialiser mon mot de passe</a>
+      </p>
+      
+      <p>Si vous n'avez pas demande cette reinitialisation, vous pouvez ignorer cet email en toute securite. Votre mot de passe actuel restera inchangé.</p>
+    </div>
+  `
+  return baseTemplate(content, 'Réinitialisation de mot de passe')
+}
 
 // Template pour notification de soumission (aux superviseurs)
 const submissionTemplate = (data: FeuilleEmailData): string => {
@@ -297,13 +352,20 @@ const sendEmail = async (to: string, subject: string, html: string): Promise<boo
   }
 
   try {
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: `"Gestion Feuilles de Travail" <${env.smtp.from}>`,
       to,
       subject,
       html,
     })
+
     logger.info(`Email envoye: ${subject} -> ${to}`)
+
+    // Si c'est un compte Ethereal, on logue l'URL de prévisualisation
+    if (info.messageId && transporter.get('host') === 'smtp.ethereal.email') {
+      logger.info(`Aperçu de l'email Ethereal: ${nodemailer.getTestMessageUrl(info)}`)
+    }
+
     return true
   } catch (error) {
     logger.error(`Erreur envoi email a ${to}:`, error)
@@ -347,6 +409,16 @@ export const emailService = {
       data.monteurEmail,
       `[Action requise] Feuille rejetee - ${data.chantierNom} - ${formatDate(data.dateTravail)}`,
       rejectionTemplate(data, rejetePar, motif)
+    )
+  },
+
+  // Envoyer l'email de réinitialisation de mot de passe
+  sendPasswordReset: async (email: string, resetToken: string): Promise<boolean> => {
+    const resetUrl = `${env.clientUrl}/reset-password?token=${resetToken}`
+    return await sendEmail(
+      email,
+      'Reinitialisation de votre mot de passe',
+      passwordResetTemplate(email, resetUrl)
     )
   },
 }

@@ -10,6 +10,9 @@ import { Dashboard } from './pages/Dashboard'
 import { Feuilles } from './pages/Feuilles'
 import { Monteurs } from './pages/Monteurs'
 import { Chantiers } from './pages/Chantiers'
+import { UserManagement } from './pages/UserManagement'
+import { ForgotPassword } from './pages/ForgotPassword'
+import { ResetPassword } from './pages/ResetPassword'
 import { Unauthorized } from './pages/Unauthorized'
 
 function App() {
@@ -26,49 +29,59 @@ function App() {
 
   return (
     <ToastProvider>
-    <Router>
-      <Routes>
-        {/* Public routes */}
-        <Route
-          path="/login"
-          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />}
-        />
-        <Route path="/unauthorized" element={<Unauthorized />} />
-
-        {/* Protected routes */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Layout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="feuilles" element={<Feuilles />} />
+      <Router>
+        <Routes>
+          {/* Public routes */}
           <Route
-            path="monteurs"
+            path="/login"
+            element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />}
+          />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/unauthorized" element={<Unauthorized />} />
+
+          {/* Protected routes */}
+          <Route
+            path="/"
             element={
-              <ProtectedRoute allowedRoles={['ADMIN', 'SUPERVISEUR']}>
-                <Monteurs />
+              <ProtectedRoute>
+                <Layout />
               </ProtectedRoute>
             }
-          />
-          <Route
-            path="chantiers"
-            element={
-              <ProtectedRoute allowedRoles={['ADMIN', 'SUPERVISEUR']}>
-                <Chantiers />
-              </ProtectedRoute>
-            }
-          />
-        </Route>
+          >
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="feuilles" element={<Feuilles />} />
+            <Route
+              path="monteurs"
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN', 'SUPERVISEUR']}>
+                  <Monteurs />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="chantiers"
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN', 'SUPERVISEUR']}>
+                  <Chantiers />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="users"
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN']}>
+                  <UserManagement />
+                </ProtectedRoute>
+              }
+            />
+          </Route>
 
-        {/* Catch all */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </Router>
+          {/* Catch all */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </Router>
     </ToastProvider>
   )
 }

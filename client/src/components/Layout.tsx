@@ -8,6 +8,7 @@ import {
   LogOut,
   Menu,
   X,
+  UserCog,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -16,6 +17,7 @@ const navigation = [
   { name: 'Feuilles de travail', href: '/feuilles', icon: FileText, roles: ['ADMIN', 'SUPERVISEUR', 'MONTEUR'] },
   { name: 'Monteurs', href: '/monteurs', icon: Users, roles: ['ADMIN', 'SUPERVISEUR'] },
   { name: 'Chantiers', href: '/chantiers', icon: Building2, roles: ['ADMIN', 'SUPERVISEUR'] },
+  { name: 'Utilisateurs', href: '/users', icon: UserCog, roles: ['ADMIN'] },
 ]
 
 export const Layout = () => {
@@ -52,9 +54,8 @@ export const Layout = () => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-30 h-full w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out lg:translate-x-0 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed top-0 left-0 z-30 h-full w-64 bg-white shadow-lg transform transition-transform duration-200 ease-in-out lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
@@ -77,11 +78,10 @@ export const Layout = () => {
                   key={item.name}
                   to={item.href}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                    isActive
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive
                       ? 'bg-blue-50 text-blue-700'
                       : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                    }`}
                 >
                   <item.icon size={20} />
                   <span>{item.name}</span>

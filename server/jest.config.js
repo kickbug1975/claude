@@ -21,7 +21,23 @@ module.exports = {
       statements: 70,
     },
   },
-  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
+  projects: [
+    {
+      displayName: 'unit',
+      preset: 'ts-jest',
+      testEnvironment: 'node',
+      testMatch: ['<rootDir>/src/__tests__/**/*.test.ts'],
+      testPathIgnorePatterns: ['<rootDir>/src/__tests__/integration/'],
+      setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
+    },
+    {
+      displayName: 'integration',
+      preset: 'ts-jest',
+      testEnvironment: 'node',
+      testMatch: ['<rootDir>/src/__tests__/**/*.int.test.ts'],
+      setupFilesAfterEnv: ['<rootDir>/src/__tests__/integration.setup.ts'],
+    },
+  ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },

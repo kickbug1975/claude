@@ -22,6 +22,20 @@ const registerSchema = z.object({
   role: z.enum(['ADMIN', 'SUPERVISEUR', 'MONTEUR']).optional(),
 })
 
+const forgotPasswordSchema = z.object({
+  email: z.string().email('Email invalide'),
+})
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(1, 'Token requis'),
+  password: z.string().min(8, 'Le mot de passe doit contenir au moins 8 caractères'),
+})
+
+const changePasswordSchema = z.object({
+  oldPassword: z.string().min(1, 'Ancien mot de passe requis'),
+  newPassword: z.string().min(8, 'Le nouveau mot de passe doit contenir au moins 8 caractères'),
+})
+
 export const login = async (req: Request, res: Response) => {
   try {
     const validation = loginSchema.safeParse(req.body)
@@ -127,6 +141,10 @@ export const register = async (req: Request, res: Response) => {
         role: role || 'MONTEUR',
       },
     })
+
+    if (!user) {
+      throw new Error('Erreur lors de la création de l\'utilisateur')
+    }
 
     // Générer le token JWT (courte durée)
     const token = generateToken({
@@ -297,6 +315,198 @@ export const logoutAll = async (req: Request, res: Response) => {
     })
   } catch (error) {
     logger.error('Erreur logoutAll', error instanceof Error ? error : undefined, {
+      userId: req.user?.userId,
+    })
+    return res.status(500).json({
+      success: false,
+      message: 'Erreur serveur',
+    })
+  }
+}
+
+/**
+ * Demande de réinitialisation de mot de passe
+ */
+export const forgotPassword = async (req: Request, res: Response) => {
+  try {
+    const validation = forgotPasswordSchema.safeParse(req.body)
+
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        message: 'Données invalides',
+        errors: validation.error.flatten().fieldErrors,
+      })
+    }
+
+    const { email } = validation.data
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+    })
+
+    // Pour des raisons de sécurité, on ne dit pas si l'email existe ou non
+    if (!user) {
+      return res.status(200).json({
+        success: true,
+        message: 'Si un compte est associé à cet email, un lien de réinitialisation a été envoyé',
+      })
+    }
+
+    // Supprimer les anciens tokens de réinitialisation pour cet utilisateur
+    await prisma.resetToken.deleteMany({
+      where: { userId: user.id },
+    })
+
+    // Générer un nouveau token de réinitialisation (valable 1 heure)
+    const crypto = await import('crypto')
+    const token = crypto.randomBytes(32).toString('hex')
+    const expiresAt = new Date()
+    expiresAt.setHours(expiresAt.getHours() + 1)
+
+    await prisma.resetToken.create({
+      data: {
+        token,
+        userId: user.id,
+        expiresAt,
+      },
+    })
+
+    // Envoyer l'email
+    const { emailService } = await import('../services/emailService')
+    await emailService.sendPasswordReset(user.email, token)
+
+    return res.status(200).json({
+      success: true,
+      message: 'Si un compte est associé à cet email, un lien de réinitialisation a été envoyé',
+    })
+  } catch (error) {
+    logger.error('Erreur forgotPassword', error instanceof Error ? error : undefined)
+    return res.status(500).json({
+      success: false,
+      message: 'Erreur serveur',
+    })
+  }
+}
+
+/**
+ * Réinitialisation du mot de passe avec le token
+ */
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const validation = resetPasswordSchema.safeParse(req.body)
+
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        message: 'Données invalides',
+        errors: validation.error.flatten().fieldErrors,
+      })
+    }
+
+    const { token, password } = validation.data
+
+    const resetToken = await prisma.resetToken.findUnique({
+      where: { token },
+      include: { user: true },
+    })
+
+    if (!resetToken || resetToken.expiresAt < new Date()) {
+      if (resetToken) {
+        await prisma.resetToken.delete({ where: { id: resetToken.id } })
+      }
+      return res.status(400).json({
+        success: false,
+        message: 'Le lien de réinitialisation est invalide ou a expiré',
+      })
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10)
+
+    // Mettre à jour le mot de passe et révoquer tous les tokens de l'utilisateur
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: resetToken.userId },
+        data: { password: hashedPassword },
+      }),
+      prisma.resetToken.deleteMany({
+        where: { userId: resetToken.userId },
+      }),
+      prisma.refreshToken.deleteMany({
+        where: { userId: resetToken.userId },
+      }),
+    ])
+
+    return res.status(200).json({
+      success: true,
+      message: 'Mot de passe réinitialisé avec succès. Vous pouvez maintenant vous connecter.',
+    })
+  } catch (error) {
+    logger.error('Erreur resetPassword', error instanceof Error ? error : undefined)
+    return res.status(500).json({
+      success: false,
+      message: 'Erreur serveur',
+    })
+  }
+}
+
+/**
+ * Changement de mot de passe (utilisateur connecté)
+ */
+export const changePassword = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Non authentifié',
+      })
+    }
+
+    const validation = changePasswordSchema.safeParse(req.body)
+
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        message: 'Données invalides',
+        errors: validation.error.flatten().fieldErrors,
+      })
+    }
+
+    const { oldPassword, newPassword } = validation.data
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+    })
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Utilisateur non trouvé',
+      })
+    }
+
+    const isPasswordValid = await bcrypt.compare(oldPassword, user.password)
+
+    if (!isPasswordValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Ancien mot de passe incorrect',
+      })
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10)
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword },
+    })
+
+    return res.status(200).json({
+      success: true,
+      message: 'Mot de passe modifié avec succès',
+    })
+  } catch (error) {
+    logger.error('Erreur changePassword', error instanceof Error ? error : undefined, {
       userId: req.user?.userId,
     })
     return res.status(500).json({
