@@ -18,7 +18,7 @@ describe('Monteur Controller', () => {
             body: {},
             params: {},
             query: {},
-            user: undefined,
+            user: { userId: 'user-1', email: 'admin@test.com', role: 'ADMIN' },
         }
         mockResponse = {
             status: jest.fn().mockReturnThis(),

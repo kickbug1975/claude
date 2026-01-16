@@ -1,5 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
+import { useCompanyInfo } from '../hooks/useCompanyInfo'
 import {
   LayoutDashboard,
   FileText,
@@ -9,6 +10,7 @@ import {
   Menu,
   X,
   UserCog,
+  Settings,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -18,10 +20,12 @@ const navigation = [
   { name: 'Monteurs', href: '/monteurs', icon: Users, roles: ['ADMIN', 'SUPERVISEUR'] },
   { name: 'Chantiers', href: '/chantiers', icon: Building2, roles: ['ADMIN', 'SUPERVISEUR'] },
   { name: 'Utilisateurs', href: '/users', icon: UserCog, roles: ['ADMIN'] },
+  { name: 'Paramètres', href: '/settings', icon: Settings, roles: ['ADMIN'] },
 ]
 
 export const Layout = () => {
   const { user, logout } = useAuthStore()
+  const { company, companyLogoUrl } = useCompanyInfo()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -60,7 +64,22 @@ export const Layout = () => {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center justify-between h-16 px-4 border-b">
-            <h1 className="text-xl font-bold text-gray-900">Maintenance</h1>
+            {companyLogoUrl ? (
+              <img
+                src={companyLogoUrl}
+                alt={company?.name || 'Logo entreprise'}
+                className="h-10 w-auto object-contain max-w-[180px]"
+                onError={(e) => {
+                  // Fallback en cas d'erreur de chargement
+                  console.error('Erreur chargement logo sidebar:', companyLogoUrl)
+                  e.currentTarget.style.display = 'none'
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                }}
+              />
+            ) : null}
+            <h1 className={`text-xl font-bold text-gray-900 ${companyLogoUrl ? 'hidden' : ''}`}>
+              {company?.name || 'Maintenance'}
+            </h1>
             <button
               onClick={() => setSidebarOpen(false)}
               className="lg:hidden text-gray-500 hover:text-gray-700"
@@ -79,8 +98,8 @@ export const Layout = () => {
                   to={item.href}
                   onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-gray-700 hover:bg-gray-100'
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'text-gray-700 hover:bg-gray-100'
                     }`}
                 >
                   <item.icon size={20} />
@@ -112,6 +131,10 @@ export const Layout = () => {
               <LogOut size={18} />
               Déconnexion
             </button>
+            {/* Debug info - Temporaire */}
+            <div className="mt-2 text-[10px] text-gray-400 break-all">
+              Debug: {companyLogoUrl ? 'Logo OK' : 'Pas de logo'} ({company?.companyLogoUrl || 'null'})
+            </div>
           </div>
         </div>
       </aside>

@@ -8,6 +8,16 @@ jest.mock('../config/database', () => ({
   prisma: {
     user: {
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn(),
+    },
+    company: {
+      findUnique: jest.fn(),
+      findFirst: jest.fn(),
       findMany: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
@@ -16,6 +26,7 @@ jest.mock('../config/database', () => ({
     },
     monteur: {
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       findMany: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
@@ -25,6 +36,7 @@ jest.mock('../config/database', () => ({
     },
     chantier: {
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       findMany: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
@@ -34,6 +46,7 @@ jest.mock('../config/database', () => ({
     },
     feuilleTravail: {
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       findMany: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
@@ -44,6 +57,7 @@ jest.mock('../config/database', () => ({
     },
     frais: {
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       findMany: jest.fn(),
       create: jest.fn(),
       delete: jest.fn(),
@@ -53,11 +67,13 @@ jest.mock('../config/database', () => ({
     refreshToken: {
       create: jest.fn(),
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       delete: jest.fn(),
       deleteMany: jest.fn(),
     },
     fichier: {
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       findMany: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),

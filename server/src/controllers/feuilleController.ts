@@ -97,7 +97,9 @@ export const getFeuilleById = async (req: Request, res: Response) => {
     const { id } = req.params
 
     const feuille = await prisma.feuilleTravail.findUnique({
-      where: { id },
+      where: {
+        id
+      },
       include: {
         monteur: true,
         chantier: true,
@@ -217,7 +219,9 @@ export const updateFeuille = async (req: Request, res: Response) => {
     }
 
     const existingFeuille = await prisma.feuilleTravail.findUnique({
-      where: { id },
+      where: {
+        id
+      },
     })
 
     if (!existingFeuille) {
@@ -277,7 +281,9 @@ export const deleteFeuille = async (req: Request, res: Response) => {
     const { id } = req.params
 
     const existingFeuille = await prisma.feuilleTravail.findUnique({
-      where: { id },
+      where: {
+        id
+      },
     })
 
     if (!existingFeuille) {
@@ -309,7 +315,9 @@ export const submitFeuille = async (req: Request, res: Response) => {
     const { id } = req.params
 
     const feuille = await prisma.feuilleTravail.findUnique({
-      where: { id },
+      where: {
+        id
+      },
       include: {
         monteur: true,
         chantier: true,
@@ -390,7 +398,9 @@ export const validateFeuille = async (req: Request, res: Response) => {
     const user = req.user!
 
     const feuille = await prisma.feuilleTravail.findUnique({
-      where: { id },
+      where: {
+        id
+      },
       include: {
         monteur: true,
         chantier: true,
@@ -471,7 +481,9 @@ export const rejectFeuille = async (req: Request, res: Response) => {
     const user = req.user!
 
     const feuille = await prisma.feuilleTravail.findUnique({
-      where: { id },
+      where: {
+        id
+      },
       include: {
         monteur: true,
         chantier: true,
@@ -560,7 +572,9 @@ export const addFrais = async (req: Request, res: Response) => {
     }
 
     const feuille = await prisma.feuilleTravail.findUnique({
-      where: { id },
+      where: {
+        id
+      },
     })
 
     if (!feuille) {

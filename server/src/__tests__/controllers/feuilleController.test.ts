@@ -229,7 +229,7 @@ describe('Feuille Controller', () => {
         })
 
         it('should prevent updating validated feuille', async () => {
-            ; (prisma.feuilleTravail.findUnique as jest.Mock).mockResolvedValue({
+            ; (prisma.feuilleTravail.findFirst as jest.Mock).mockResolvedValue({
                 id: 'feuille-1',
                 statut: 'VALIDE',
             })

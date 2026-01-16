@@ -128,6 +128,7 @@ describe('Fichier Controller', () => {
                 },
             ]
 
+                ; (prisma.feuilleTravail.findUnique as jest.Mock).mockResolvedValue({ id: 'feuille-1' })
                 ; (prisma.fichier.findMany as jest.Mock).mockResolvedValue(mockFichiers)
                 ; (storageService.getUrl as jest.Mock).mockReturnValue('https://signed-url.com/test.pdf')
 

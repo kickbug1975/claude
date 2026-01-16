@@ -5,18 +5,89 @@ const formatDate = (date: string) => {
   return new Date(date).toLocaleDateString('fr-FR')
 }
 
-export const exportFeuilleToPDF = (feuille: FeuilleTravail) => {
+// Helper pour charger une image depuis une URL
+const loadImage = (url: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.crossOrigin = 'Anonymous'
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        ctx.drawImage(img, 0, 0)
+        resolve(canvas.toDataURL('image/png'))
+      } else {
+        reject(new Error('Impossible de créer le contexte canvas'))
+      }
+    }
+    img.onerror = (_e) => reject(new Error(`Erreur chargement image: ${url}`))
+    img.src = url
+  })
+}
+
+export const exportFeuilleToPDF = async (feuille: FeuilleTravail, companyInfo?: any) => {
   const doc = new jsPDF()
 
   const pageWidth = doc.internal.pageSize.getWidth()
   let y = 20
 
-  // Titre
-  doc.setFontSize(18)
-  doc.setFont('helvetica', 'bold')
-  doc.text('Feuille de Travail', pageWidth / 2, y, { align: 'center' })
+  // 1. Logo et Header
+  if (companyInfo?.companyLogoUrl) {
+    try {
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+      const logoUrl = `${baseUrl}${companyInfo.companyLogoUrl}`
 
-  y += 10
+      const imgData = await loadImage(logoUrl)
+      // Ratio 2:1 pour le logo, hauteur 20mm
+      doc.addImage(imgData, 'PNG', 20, y, 40, 0) // Width 40, auto height
+
+      // Infos entreprise à côté
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'bold')
+      doc.text(companyInfo.name || '', 70, y + 5)
+
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(9)
+      let infoY = y + 10
+      if (companyInfo.address) {
+        doc.text(companyInfo.address, 70, infoY)
+        infoY += 5
+      }
+      if (companyInfo.email) {
+        doc.text(companyInfo.email, 70, infoY)
+        infoY += 5
+      }
+      if (companyInfo.phone) {
+        doc.text(companyInfo.phone, 70, infoY)
+      }
+
+      y += 30 // Espace réservé pour le header
+    } catch (error) {
+      console.error('Erreur ajout logo PDF:', error)
+      // Fallback si erreur logo
+      doc.setFontSize(18)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Feuille de Travail', pageWidth / 2, y, { align: 'center' })
+      y += 15
+    }
+  } else {
+    // Header standard sans logo
+    doc.setFontSize(18)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Feuille de Travail', pageWidth / 2, y, { align: 'center' })
+    y += 15
+  }
+
+  // Titre si logo présent (sinon déjà affiché)
+  if (companyInfo?.companyLogoUrl) {
+    doc.setFontSize(18)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Feuille de Travail', pageWidth / 2, y, { align: 'center' })
+    y += 10
+  }
+
   doc.setFontSize(10)
   doc.setFont('helvetica', 'normal')
   doc.text(`Reference: FT-${feuille.id.substring(0, 8).toUpperCase()}`, pageWidth / 2, y, { align: 'center' })

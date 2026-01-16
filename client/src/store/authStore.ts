@@ -12,12 +12,15 @@ interface AuthState {
   token: string | null
   refreshToken: string | null
   isAuthenticated: boolean
+  isSetupComplete: boolean
   isLoading: boolean
   error: string | null
   login: (email: string, password: string) => Promise<boolean>
   logout: () => Promise<void>
   refreshAccessToken: () => Promise<boolean>
   checkAuth: () => Promise<void>
+  checkSetup: () => Promise<void>
+  initialCheck: () => Promise<void>
   clearError: () => void
 }
 
@@ -28,6 +31,7 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       refreshToken: null,
       isAuthenticated: false,
+      isSetupComplete: false,
       isLoading: false,
       error: null,
 
@@ -48,6 +52,9 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           })
+
+          // Vérifier le statut de setup après login
+          await get().checkSetup()
           return true
         } catch (error: any) {
           const message = error.response?.data?.message || 'Erreur de connexion'
@@ -75,6 +82,7 @@ export const useAuthStore = create<AuthState>()(
           token: null,
           refreshToken: null,
           isAuthenticated: false,
+          isSetupComplete: false,
           error: null,
         })
       },
@@ -112,18 +120,22 @@ export const useAuthStore = create<AuthState>()(
         const refreshToken = localStorage.getItem('refreshToken')
 
         if (!token) {
-          set({ isAuthenticated: false, user: null })
+          set({ isAuthenticated: false, user: null, isSetupComplete: false })
           return
         }
 
         try {
           const response = await api.get('/auth/me')
+          const user = response.data.data
           set({
-            user: response.data.data,
+            user,
             token,
             refreshToken,
             isAuthenticated: true,
           })
+
+          // Vérifier le statut de setup après checkAuth
+          await get().checkSetup()
         } catch (error: any) {
           // Si l'erreur est 401, essayer de rafraîchir le token
           if (error.response?.status === 401 && refreshToken) {
@@ -143,7 +155,29 @@ export const useAuthStore = create<AuthState>()(
             token: null,
             refreshToken: null,
             isAuthenticated: false,
+            isSetupComplete: false,
+            error: null,
           })
+        }
+      },
+
+      checkSetup: async () => {
+        try {
+          const response = await api.get('/setup/status')
+          set({ isSetupComplete: response.data.data.isSetupComplete })
+        } catch (error) {
+          console.error('Erreur checkSetup:', error)
+        }
+      },
+
+      initialCheck: async () => {
+        try {
+          const response = await api.get('/setup/status')
+          set({ isSetupComplete: response.data.data.isSetupComplete })
+        } catch (error) {
+          console.error('Erreur initialCheck:', error)
+          // Par défaut on considère que c'est ok pour éviter de bloquer l'app en cas d'erreur API
+          set({ isSetupComplete: true })
         }
       },
 

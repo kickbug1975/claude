@@ -32,6 +32,26 @@ enum TypeFrais {
 }
 
 // ============================================
+// MODÈLE: Company (Entreprises/Clients)
+// ============================================
+model Company {
+  id             String   @id @default(uuid())
+  name           String
+  siret          String?  @unique
+  address        String?
+  email          String?
+  phone          String?
+  companyLogoUrl String?
+  loginLogoUrl   String?
+  isSetupComplete Boolean  @default(false)
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("companies")
+}
+
+// ============================================
 // MODÈLE: User (Utilisateurs)
 // ============================================
 model User {

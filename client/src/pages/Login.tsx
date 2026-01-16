@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useAuthStore } from '../store/authStore'
-import { Eye, EyeOff, LogIn, Loader2 } from 'lucide-react'
+import { useCompanyInfo } from '../hooks/useCompanyInfo'
+import { Eye, EyeOff, LogIn, Loader2, Lock } from 'lucide-react'
 
 interface LoginForm {
   email: string
@@ -13,6 +14,7 @@ export const Login = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { login, isLoading, error, clearError } = useAuthStore()
+  const { company, loginLogoUrl } = useCompanyInfo()
   const [showPassword, setShowPassword] = useState(false)
 
   const from = location.state?.from?.pathname || '/dashboard'
@@ -36,8 +38,30 @@ export const Login = () => {
       <div className="max-w-md w-full">
         <div className="bg-white rounded-lg shadow-lg p-8">
           <div className="text-center mb-8">
+            {loginLogoUrl ? (
+              <img
+                src={loginLogoUrl}
+                alt={company?.name || 'Logo'}
+                className="h-24 w-auto mx-auto mb-6 object-contain"
+                onError={(e) => {
+                  console.error('Erreur chargement logo login:', loginLogoUrl)
+                  e.currentTarget.style.display = 'none'
+                  // Afficher l'URL pour debug
+                  const debugEl = document.createElement('div')
+                  debugEl.className = 'text-xs text-red-500 mb-4'
+                  debugEl.innerText = `Erreur logo: ${loginLogoUrl}`
+                  e.currentTarget.parentElement?.appendChild(debugEl)
+
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                }}
+              />
+            ) : null}
+            <div className={`w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 ${loginLogoUrl ? 'hidden' : ''}`}>
+              <Lock className="text-white" size={32} />
+            </div>
+
             <h1 className="text-3xl font-bold text-gray-900">Connexion</h1>
-            <p className="text-gray-600 mt-2">Gestion des Feuilles de Travail</p>
+            <p className="text-gray-600 mt-2">{company?.name || 'Gestion des Feuilles de Travail'}</p>
           </div>
 
           {error && (

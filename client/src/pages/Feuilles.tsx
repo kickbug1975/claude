@@ -8,6 +8,7 @@ import { Pagination } from '../components/Pagination'
 import { useToast } from '../components/Toast'
 import { exportFeuilleToPDF } from '../utils/pdfExport'
 import { useAuthStore } from '../store/authStore'
+import { useCompanyInfo } from '../hooks/useCompanyInfo'
 
 const getStatusBadge = (statut: string) => {
   switch (statut) {
@@ -296,8 +297,8 @@ export const Feuilles = () => {
           viewMode
             ? 'Details de la feuille'
             : selectedFeuille
-            ? 'Modifier la feuille'
-            : 'Nouvelle feuille de travail'
+              ? 'Modifier la feuille'
+              : 'Nouvelle feuille de travail'
         }
         size="xl"
       >
@@ -332,6 +333,7 @@ interface FeuilleDetailProps {
 
 const FeuilleDetail = ({ feuille, onClose, onRefresh, showToast, userRole }: FeuilleDetailProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const { company } = useCompanyInfo()
 
   // Vérifier si l'utilisateur peut valider/rejeter (Admin ou Superviseur)
   const canValidate = userRole === 'ADMIN' || userRole === 'SUPERVISEUR'
@@ -385,7 +387,7 @@ const FeuilleDetail = ({ feuille, onClose, onRefresh, showToast, userRole }: Feu
 
   const handleExportPDF = () => {
     try {
-      exportFeuilleToPDF(feuille)
+      exportFeuilleToPDF(feuille, company)
       showToast('PDF exporte avec succes', 'success')
     } catch (error) {
       console.error('Erreur export PDF:', error)

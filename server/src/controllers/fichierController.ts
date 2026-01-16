@@ -83,6 +83,18 @@ export const getFilesByFeuille = async (req: Request, res: Response) => {
   try {
     const { feuilleId } = req.params
 
+    // Verify access to the feuille first
+    const feuille = await prisma.feuilleTravail.findUnique({
+      where: { id: feuilleId }
+    })
+
+    if (!feuille) {
+      return res.status(404).json({
+        success: false,
+        message: 'Feuille de travail non trouvée',
+      })
+    }
+
     const fichiers = await prisma.fichier.findMany({
       where: { feuilleId },
       orderBy: { createdAt: 'desc' },
@@ -116,6 +128,7 @@ export const getFileById = async (req: Request, res: Response) => {
 
     const fichier = await prisma.fichier.findUnique({
       where: { id },
+      include: { feuille: true }
     })
 
     if (!fichier) {
@@ -150,6 +163,7 @@ export const deleteFile = async (req: Request, res: Response) => {
 
     const fichier = await prisma.fichier.findUnique({
       where: { id },
+      include: { feuille: true }
     })
 
     if (!fichier) {
@@ -190,9 +204,10 @@ export const attachFileToFeuille = async (req: Request, res: Response) => {
     const { id } = req.params
     const { feuilleId } = req.body
 
-    // Vérifier que le fichier existe
+    // Vérifier que le fichier existe et appartient à l'entreprise (s'il est lié)
     const fichier = await prisma.fichier.findUnique({
       where: { id },
+      include: { feuille: true }
     })
 
     if (!fichier) {

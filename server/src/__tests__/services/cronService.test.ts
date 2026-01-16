@@ -130,8 +130,13 @@ describe('Cron Service', () => {
         })
 
         it('should execute pending reminder job', async () => {
-            ; (prisma.feuilleTravail.findMany as jest.Mock).mockResolvedValue([])
-                ; (prisma.user.findMany as jest.Mock).mockResolvedValue([])
+            const mockFeuilles = [
+                {
+                    id: 'feuille-1',
+                },
+            ]
+                ; (prisma.feuilleTravail.findMany as jest.Mock).mockResolvedValue(mockFeuilles)
+                ; (prisma.user.findMany as jest.Mock).mockResolvedValue([{ email: 'admin@test.com' }])
 
             const result = await runJobManually('Rappel feuilles en attente')
 

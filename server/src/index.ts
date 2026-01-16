@@ -18,6 +18,7 @@ import chantierRoutes from './routes/chantierRoutes'
 import feuilleRoutes from './routes/feuilleRoutes'
 import fichierRoutes from './routes/fichierRoutes'
 import cronRoutes from './routes/cronRoutes'
+import setupRoutes from './routes/setupRoutes'
 import { startCronJobs } from './services/cronService'
 import { verifyEmailConfig } from './services/emailService'
 
@@ -53,7 +54,7 @@ app.use(
 // Rate limiting - Protection contre les attaques par force brute
 const limiter = rateLimit({
   windowMs: env.rateLimit.windowMs,
-  max: env.rateLimit.maxRequests,
+  max: env.nodeEnv === 'development' ? 1000 : env.rateLimit.maxRequests,
   message: {
     success: false,
     message: 'Trop de requetes, veuillez reessayer plus tard',
@@ -65,7 +66,7 @@ const limiter = rateLimit({
 // Rate limiting plus strict pour l'authentification
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // 10 tentatives max
+  max: env.nodeEnv === 'development' ? 100 : 10, // 100 tentatives max en dev
   message: {
     success: false,
     message: 'Trop de tentatives de connexion, veuillez reessayer dans 15 minutes',
@@ -74,8 +75,8 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 })
 
-// Appliquer le rate limiting global (sauf en test)
-if (env.nodeEnv !== 'test') {
+// Appliquer le rate limiting global (sauf en test et dev pour éviter les blocages)
+if (env.nodeEnv !== 'test' && env.nodeEnv !== 'development') {
   app.use('/api', limiter)
 }
 
@@ -170,7 +171,18 @@ app.get('/api-docs.json', (_req: Request, res: Response) => {
 })
 
 // Servir les fichiers uploadés localement (fallback si S3 non configuré)
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
+const uploadsPath = path.join(process.cwd(), 'uploads')
+logger.info(`Serving static files from: ${uploadsPath}`)
+
+app.use('/uploads', (req, res, next) => {
+  logger.info(`Request for static file: ${req.url}`)
+  // Permettre l'accès CORS pour les images (ex: pour jsPDF)
+  res.header('Access-Control-Allow-Origin', '*')
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+  res.header('Access-Control-Allow-Headers', 'Content-Type')
+  res.header('Cross-Origin-Resource-Policy', 'cross-origin')
+  next()
+}, express.static(uploadsPath))
 
 // Protection CSRF pour toutes les routes API (sauf GET/HEAD/OPTIONS et sauf en test)
 if (env.nodeEnv !== 'test') {
@@ -186,6 +198,7 @@ app.use('/api/chantiers', chantierRoutes)
 app.use('/api/feuilles', feuilleRoutes)
 app.use('/api/fichiers', fichierRoutes)
 app.use('/api/cron', cronRoutes)
+app.use('/api/setup', setupRoutes)
 
 // Gestion des erreurs 404
 app.use((_req: Request, res: Response) => {

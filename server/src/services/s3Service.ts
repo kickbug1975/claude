@@ -14,7 +14,10 @@ const s3 = new AWS.S3({
 
 // Vérifier si S3 est configuré
 export const isS3Configured = (): boolean => {
-  return !!(env.aws.accessKeyId && env.aws.secretAccessKey && env.aws.s3Bucket)
+  const { accessKeyId, secretAccessKey, s3Bucket } = env.aws
+  const isPlaceholder = (val: string) => !val || val === 'your-access-key' || val === 'your-secret-key' || val === 'maintenance-files'
+
+  return !!(accessKeyId && secretAccessKey && s3Bucket && !isPlaceholder(accessKeyId) && !isPlaceholder(secretAccessKey))
 }
 
 // Interface pour les métadonnées de fichier

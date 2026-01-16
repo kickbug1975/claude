@@ -62,7 +62,6 @@ registerJob({
   schedule: '0 9 * * *', // Tous les jours à 9h00
   enabled: true,
   task: async () => {
-    // Trouver les feuilles en brouillon de plus de 24h
     const oneDayAgo = new Date()
     oneDayAgo.setDate(oneDayAgo.getDate() - 1)
 
@@ -75,18 +74,16 @@ registerJob({
       },
       include: {
         monteur: true,
-        chantier: true,
       },
     })
 
-    logger.info(`[CRON] ${feuillesBrouillon.length} feuille(s) en brouillon trouvée(s)`)
-
-    // Note: Les emails de rappel pourraient être envoyés ici
-    // Pour l'instant, on log simplement les résultats
-    for (const feuille of feuillesBrouillon) {
-      logger.info(
-        `[CRON] Rappel: Feuille ${feuille.id.substring(0, 8)} - ${feuille.monteur.prenom} ${feuille.monteur.nom}`
-      )
+    if (feuillesBrouillon.length > 0) {
+      logger.info(`[CRON] ${feuillesBrouillon.length} feuille(s) en brouillon trouvée(s)`)
+      for (const feuille of feuillesBrouillon) {
+        logger.info(
+          `[CRON] Rappel: Feuille ${feuille.id.substring(0, 8)} - ${feuille.monteur.prenom} ${feuille.monteur.nom}`
+        )
+      }
     }
   },
 })
@@ -100,7 +97,6 @@ registerJob({
   schedule: '0 10 * * *', // Tous les jours à 10h00
   enabled: true,
   task: async () => {
-    // Trouver les feuilles soumises depuis plus de 48h
     const twoDaysAgo = new Date()
     twoDaysAgo.setDate(twoDaysAgo.getDate() - 2)
 
@@ -113,23 +109,17 @@ registerJob({
       },
       include: {
         monteur: true,
-        chantier: true,
       },
     })
 
-    logger.info(`[CRON] ${feuillesEnAttente.length} feuille(s) en attente de validation`)
-
-    // Récupérer les superviseurs pour notification
-    const superviseurs = await prisma.user.findMany({
-      where: {
-        role: {
-          in: ['ADMIN', 'SUPERVISEUR'],
+    if (feuillesEnAttente.length > 0) {
+      const superviseurs = await prisma.user.findMany({
+        where: {
+          role: { in: ['ADMIN', 'SUPERVISEUR'] },
         },
-      },
-      select: { email: true },
-    })
+        select: { email: true },
+      })
 
-    if (feuillesEnAttente.length > 0 && superviseurs.length > 0) {
       logger.info(
         `[CRON] ${feuillesEnAttente.length} feuille(s) en attente - ${superviseurs.length} superviseur(s) à notifier`
       )
@@ -207,49 +197,37 @@ registerJob({
     const tomorrow = new Date(today)
     tomorrow.setDate(tomorrow.getDate() + 1)
 
-    // Compter les feuilles du jour
     const stats = await prisma.feuilleTravail.groupBy({
       by: ['statut'],
       where: {
-        createdAt: {
-          gte: today,
-          lt: tomorrow,
-        },
+        createdAt: { gte: today, lt: tomorrow },
       },
       _count: true,
     })
 
-    // Compter le total d'heures travaillées
     const heuresTotal = await prisma.feuilleTravail.aggregate({
       where: {
-        dateTravail: {
-          gte: today,
-          lt: tomorrow,
-        },
+        dateTravail: { gte: today, lt: tomorrow },
         statut: 'VALIDE',
       },
-      _sum: {
-        heuresTotales: true,
-      },
+      _sum: { heuresTotales: true },
     })
 
-    // Compter les nouveaux monteurs
     const nouveauxMonteurs = await prisma.monteur.count({
       where: {
-        createdAt: {
-          gte: today,
-          lt: tomorrow,
-        },
+        createdAt: { gte: today, lt: tomorrow },
       },
     })
 
-    logger.info('[CRON] === Statistiques du jour ===')
-    logger.info(`[CRON] Feuilles créées: ${stats.reduce((acc, s) => acc + s._count, 0)}`)
-    stats.forEach((s) => {
-      logger.info(`[CRON]   - ${s.statut}: ${s._count}`)
-    })
-    logger.info(`[CRON] Heures validées: ${heuresTotal._sum.heuresTotales || 0}h`)
-    logger.info(`[CRON] Nouveaux monteurs: ${nouveauxMonteurs}`)
+    if (stats.length > 0 || nouveauxMonteurs > 0) {
+      logger.info(`[CRON] === Statistiques du jour ===`)
+      logger.info(`[CRON] Feuilles créées: ${stats.reduce((acc, s) => acc + s._count, 0)}`)
+      stats.forEach((s) => {
+        logger.info(`[CRON]   - ${s.statut}: ${s._count}`)
+      })
+      logger.info(`[CRON] Heures validées: ${heuresTotal._sum.heuresTotales || 0}h`)
+      logger.info(`[CRON] Nouveaux monteurs: ${nouveauxMonteurs}`)
+    }
   },
 })
 
@@ -265,78 +243,58 @@ registerJob({
     const oneWeekAgo = new Date()
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
 
-    // Statistiques de la semaine
     const feuillesValidees = await prisma.feuilleTravail.count({
       where: {
         statut: 'VALIDE',
-        updatedAt: {
-          gte: oneWeekAgo,
-        },
+        updatedAt: { gte: oneWeekAgo },
       },
     })
 
     const feuillesRejetees = await prisma.feuilleTravail.count({
       where: {
         statut: 'REJETE',
-        updatedAt: {
-          gte: oneWeekAgo,
-        },
+        updatedAt: { gte: oneWeekAgo },
       },
     })
 
     const heuresTotal = await prisma.feuilleTravail.aggregate({
       where: {
         statut: 'VALIDE',
-        dateTravail: {
-          gte: oneWeekAgo,
-        },
+        dateTravail: { gte: oneWeekAgo },
       },
-      _sum: {
-        heuresTotales: true,
-      },
+      _sum: { heuresTotales: true },
     })
 
     const fraisTotal = await prisma.frais.aggregate({
       where: {
         feuille: {
           statut: 'VALIDE',
-          dateTravail: {
-            gte: oneWeekAgo,
-          },
+          dateTravail: { gte: oneWeekAgo },
         },
       },
-      _sum: {
-        montant: true,
-      },
+      _sum: { montant: true },
     })
 
-    // Top 5 monteurs par heures
     const topMonteurs = await prisma.feuilleTravail.groupBy({
       by: ['monteurId'],
       where: {
         statut: 'VALIDE',
-        dateTravail: {
-          gte: oneWeekAgo,
-        },
+        dateTravail: { gte: oneWeekAgo },
       },
-      _sum: {
-        heuresTotales: true,
-      },
-      orderBy: {
-        _sum: {
-          heuresTotales: 'desc',
-        },
-      },
+      _sum: { heuresTotales: true },
+      orderBy: { _sum: { heuresTotales: 'desc' } },
       take: 5,
     })
 
-    logger.info('[CRON] === Rapport Hebdomadaire ===')
-    logger.info(`[CRON] Période: ${oneWeekAgo.toLocaleDateString('fr-FR')} - ${new Date().toLocaleDateString('fr-FR')}`)
-    logger.info(`[CRON] Feuilles validées: ${feuillesValidees}`)
-    logger.info(`[CRON] Feuilles rejetées: ${feuillesRejetees}`)
-    logger.info(`[CRON] Heures totales: ${heuresTotal._sum.heuresTotales || 0}h`)
-    logger.info(`[CRON] Frais totaux: ${(fraisTotal._sum.montant || 0).toFixed(2)} EUR`)
-    logger.info(`[CRON] Top ${topMonteurs.length} monteurs cette semaine`)
+    if (feuillesValidees > 0 || feuillesRejetees > 0) {
+      logger.info(`[CRON] === Rapport Hebdomadaire ===`)
+      logger.info(`[CRON] Période: ${oneWeekAgo.toLocaleDateString('fr-FR')} - ${new Date().toLocaleDateString('fr-FR')}`)
+      logger.info(`[CRON] Feuilles validées: ${feuillesValidees}`)
+      logger.info(`[CRON] Feuilles rejetées: ${feuillesRejetees}`)
+      logger.info(`[CRON] Heures totales: ${heuresTotal._sum.heuresTotales || 0}h`)
+      logger.info(`[CRON] Frais totaux: ${(fraisTotal._sum.montant || 0).toFixed(2)} EUR`)
+      logger.info(`[CRON] Top ${topMonteurs.length} monteurs cette semaine`)
+    }
   },
 })
 

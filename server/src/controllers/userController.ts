@@ -24,6 +24,7 @@ const updateUserSchema = z.object({
 export const getAllUsers = async (_req: Request, res: Response) => {
     try {
         const users = await prisma.user.findMany({
+            where: {},
             include: {
                 monteur: true,
             },
@@ -58,7 +59,9 @@ export const getUserById = async (req: Request, res: Response) => {
         const { id } = req.params
 
         const user = await prisma.user.findUnique({
-            where: { id },
+            where: {
+                id
+            },
             include: {
                 monteur: true,
             },
@@ -163,6 +166,17 @@ export const updateUser = async (req: Request, res: Response) => {
             updateData.password = await bcrypt.hash(updateData.password, 10)
         }
 
+        const existingUser = await prisma.user.findUnique({
+            where: { id }
+        })
+
+        if (!existingUser) {
+            return res.status(404).json({
+                success: false,
+                message: 'Utilisateur non trouvé',
+            })
+        }
+
         const user = await prisma.user.update({
             where: { id },
             data: updateData,
@@ -196,6 +210,17 @@ export const deleteUser = async (req: Request, res: Response) => {
             return res.status(400).json({
                 success: false,
                 message: 'Vous ne pouvez pas supprimer votre propre compte',
+            })
+        }
+
+        const existingUser = await prisma.user.findUnique({
+            where: { id }
+        })
+
+        if (!existingUser) {
+            return res.status(404).json({
+                success: false,
+                message: 'Utilisateur non trouvé',
             })
         }
 

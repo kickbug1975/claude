@@ -19,8 +19,8 @@ export const getAllMonteurs = async (req: Request, res: Response) => {
   try {
     const { actif } = req.query
     const { page, limit, skip } = getPaginationParams(req.query)
-
-    const where = actif !== undefined ? { actif: actif === 'true' } : {}
+    const where: any = {}
+    if (actif !== undefined) where.actif = actif === 'true'
 
     // Compter le total avec le même where
     const total = await prisma.monteur.count({ where })
@@ -59,7 +59,9 @@ export const getMonteurById = async (req: Request, res: Response) => {
     const { id } = req.params
 
     const monteur = await prisma.monteur.findUnique({
-      where: { id },
+      where: {
+        id
+      },
       include: {
         user: {
           select: { id: true, email: true, role: true },
@@ -133,7 +135,7 @@ export const createMonteur = async (req: Request, res: Response) => {
     }
 
     const monteur = await prisma.monteur.create({
-      data,
+      data: data,
     })
 
     return res.status(201).json({
@@ -164,7 +166,9 @@ export const updateMonteur = async (req: Request, res: Response) => {
     }
 
     const existingMonteur = await prisma.monteur.findUnique({
-      where: { id },
+      where: {
+        id
+      },
     })
 
     if (!existingMonteur) {
@@ -198,7 +202,9 @@ export const deleteMonteur = async (req: Request, res: Response) => {
     const { id } = req.params
 
     const existingMonteur = await prisma.monteur.findUnique({
-      where: { id },
+      where: {
+        id
+      },
     })
 
     if (!existingMonteur) {

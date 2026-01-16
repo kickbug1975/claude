@@ -14,9 +14,15 @@ import { UserManagement } from './pages/UserManagement'
 import { ForgotPassword } from './pages/ForgotPassword'
 import { ResetPassword } from './pages/ResetPassword'
 import { Unauthorized } from './pages/Unauthorized'
+import { Wizard } from './pages/Wizard'
+import { Settings } from './pages/Settings'
 
 function App() {
-  const { checkAuth, isAuthenticated } = useAuthStore()
+  const checkAuth = useAuthStore((state) => state.checkAuth)
+  const initialCheck = useAuthStore((state) => state.initialCheck)
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const isSetupComplete = useAuthStore((state) => state.isSetupComplete)
+  const user = useAuthStore((state) => state.user)
 
   useEffect(() => {
     // Initialiser le token CSRF au démarrage
@@ -24,8 +30,9 @@ function App() {
       console.error('Erreur lors de l\'initialisation du token CSRF:', error)
     })
 
+    initialCheck()
     checkAuth()
-  }, [checkAuth])
+  }, [checkAuth, initialCheck])
 
   return (
     <ToastProvider>
@@ -34,19 +41,23 @@ function App() {
           {/* Public routes */}
           <Route
             path="/login"
-            element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />}
+            element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
           />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
 
-          {/* Protected routes */}
+          {/* Root dynamic routing */}
           <Route
             path="/"
             element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
+              !isSetupComplete ? (
+                <Wizard />
+              ) : (
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              )
             }
           >
             <Route index element={<Navigate to="/dashboard" replace />} />
@@ -76,7 +87,25 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="settings"
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN']}>
+                  <Settings />
+                </ProtectedRoute>
+              }
+            />
           </Route>
+
+          {/* Standalone Wizard route for direct access or internal use */}
+          <Route
+            path="/wizard"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                {isSetupComplete ? <Navigate to="/dashboard" replace /> : <Wizard />}
+              </ProtectedRoute>
+            }
+          />
 
           {/* Catch all */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

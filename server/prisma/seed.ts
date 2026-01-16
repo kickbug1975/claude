@@ -14,7 +14,16 @@ async function main() {
   await prisma.monteur.deleteMany()
   await prisma.chantier.deleteMany()
 
-  // 2. Créer un utilisateur ADMIN par défaut
+  // 2. Créer l'entreprise par défaut
+  console.log('🏢 Création de l\'entreprise par défaut...')
+  const company = await prisma.company.create({
+    data: {
+      name: 'Entreprise de Maintenance',
+      isSetupComplete: true, // Pour le demo seed, on considère le setup fini
+    },
+  })
+
+  // 3. Créer un utilisateur ADMIN par défaut
   console.log('👤 Création de l\'utilisateur admin...')
   const hashedPassword = await bcrypt.hash('Admin123!', 10)
 

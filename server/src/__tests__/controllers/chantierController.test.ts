@@ -18,7 +18,7 @@ describe('Chantier Controller', () => {
             body: {},
             params: {},
             query: {},
-            user: undefined,
+            user: { userId: 'user-1', email: 'admin@test.com', role: 'ADMIN' },
         }
         mockResponse = {
             status: jest.fn().mockReturnThis(),
@@ -282,7 +282,7 @@ describe('Chantier Controller', () => {
         })
 
         it('should return 400 for invalid data', async () => {
-            ; (prisma.chantier.findUnique as jest.Mock).mockResolvedValue({ id: 'chantier-1' })
+            ; (prisma.chantier.findFirst as jest.Mock).mockResolvedValue({ id: 'chantier-1' })
 
             mockRequest.params = { id: 'chantier-1' }
             mockRequest.body = { nom: '' } // Empty nom will fail validation

@@ -19,8 +19,8 @@ export const getAllChantiers = async (req: Request, res: Response) => {
   try {
     const { actif } = req.query
     const { page, limit, skip } = getPaginationParams(req.query)
-
-    const where = actif !== undefined ? { actif: actif === 'true' } : {}
+    const where: any = {}
+    if (actif !== undefined) where.actif = actif === 'true'
 
     // Compter le total avec le même where
     const total = await prisma.chantier.count({ where })
@@ -54,7 +54,9 @@ export const getChantierById = async (req: Request, res: Response) => {
     const { id } = req.params
 
     const chantier = await prisma.chantier.findUnique({
-      where: { id },
+      where: {
+        id
+      },
       include: {
         feuillesTravail: {
           take: 10,
@@ -113,7 +115,7 @@ export const createChantier = async (req: Request, res: Response) => {
     }
 
     const chantier = await prisma.chantier.create({
-      data,
+      data: data,
     })
 
     return res.status(201).json({
@@ -144,7 +146,9 @@ export const updateChantier = async (req: Request, res: Response) => {
     }
 
     const existingChantier = await prisma.chantier.findUnique({
-      where: { id },
+      where: {
+        id
+      },
     })
 
     if (!existingChantier) {
@@ -178,7 +182,9 @@ export const deleteChantier = async (req: Request, res: Response) => {
     const { id } = req.params
 
     const existingChantier = await prisma.chantier.findUnique({
-      where: { id },
+      where: {
+        id
+      },
     })
 
     if (!existingChantier) {

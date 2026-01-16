@@ -95,14 +95,12 @@ api.interceptors.response.use(
           // Si le refresh échoue, déconnecter
           localStorage.removeItem('token')
           localStorage.removeItem('refreshToken')
-          window.location.href = '/login'
           return Promise.reject(refreshError)
         }
       } else {
         // Pas de refresh token ou refresh échoué, déconnecter
         localStorage.removeItem('token')
         localStorage.removeItem('refreshToken')
-        window.location.href = '/login'
       }
     }
 
