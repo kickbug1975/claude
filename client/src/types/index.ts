@@ -55,6 +55,7 @@ export interface FeuilleTravail {
   chantier?: Chantier
   frais?: Frais[]
   fichiers?: Fichier[]
+  syncStatus?: 'synced' | 'pending' | 'error'
 }
 
 export interface Frais {

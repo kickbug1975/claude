@@ -23,6 +23,8 @@ const navigation = [
   { name: 'Paramètres', href: '/settings', icon: Settings, roles: ['ADMIN'] },
 ]
 
+import { NetworkStatusBanner } from './NetworkStatusBanner'
+
 export const Layout = () => {
   const { user, logout } = useAuthStore()
   const { company, companyLogoUrl } = useCompanyInfo()
@@ -141,6 +143,7 @@ export const Layout = () => {
 
       {/* Main content */}
       <div className="lg:pl-64">
+        <NetworkStatusBanner />
         {/* Top bar */}
         <header className="sticky top-0 z-10 bg-white shadow-sm h-16 flex items-center px-4">
           <button
