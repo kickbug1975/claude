@@ -22,7 +22,6 @@ function App() {
   const initialCheck = useAuthStore((state) => state.initialCheck)
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const isSetupComplete = useAuthStore((state) => state.isSetupComplete)
-  const user = useAuthStore((state) => state.user)
 
   useEffect(() => {
     // Initialiser le token CSRF au démarrage
@@ -41,7 +40,15 @@ function App() {
           {/* Public routes */}
           <Route
             path="/login"
-            element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
+            element={
+              !isSetupComplete ? (
+                <Navigate to="/" replace />
+              ) : isAuthenticated ? (
+                <Navigate to="/" replace />
+              ) : (
+                <Login />
+              )
+            }
           />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
@@ -96,16 +103,6 @@ function App() {
               }
             />
           </Route>
-
-          {/* Standalone Wizard route for direct access or internal use */}
-          <Route
-            path="/wizard"
-            element={
-              <ProtectedRoute allowedRoles={['ADMIN']}>
-                {isSetupComplete ? <Navigate to="/dashboard" replace /> : <Wizard />}
-              </ProtectedRoute>
-            }
-          />
 
           {/* Catch all */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

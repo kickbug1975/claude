@@ -82,9 +82,12 @@ export const useAuthStore = create<AuthState>()(
           token: null,
           refreshToken: null,
           isAuthenticated: false,
-          isSetupComplete: false,
+          // Ne pas réinitialiser isSetupComplete - c'est un état global de l'application
           error: null,
         })
+
+        // Rediriger vers la page de login
+        window.location.href = '/login'
       },
 
       refreshAccessToken: async () => {

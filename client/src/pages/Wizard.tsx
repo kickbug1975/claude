@@ -121,6 +121,15 @@ export const Wizard = () => {
             } else {
                 const success = await login(email, password)
                 if (success) {
+                    // Vérifier que l'utilisateur est bien un ADMIN
+                    const currentUser = useAuthStore.getState().user
+                    if (currentUser?.role !== 'ADMIN') {
+                        showToast('Seul un administrateur peut configurer l\'application', 'error')
+                        await logout()
+                        setEmail('')
+                        setPassword('')
+                        return
+                    }
                     showToast('Connexion réussie', 'success')
                     setStep(2)
                 } else {

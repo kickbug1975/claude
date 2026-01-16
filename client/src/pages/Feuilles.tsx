@@ -5,6 +5,7 @@ import { FileText, Plus, Search, Filter, Loader2, Eye, ChevronDown, Edit2, Downl
 import { Modal } from '../components/Modal'
 import { FeuilleForm } from '../components/FeuilleForm'
 import { Pagination } from '../components/Pagination'
+import { PhotoUpload } from '../components/PhotoUpload'
 import { useToast } from '../components/Toast'
 import { exportFeuilleToPDF } from '../utils/pdfExport'
 import { useAuthStore } from '../store/authStore'
@@ -482,6 +483,14 @@ const FeuilleDetail = ({ feuille, onClose, onRefresh, showToast, userRole }: Feu
           </div>
         </div>
       )}
+
+      {/* Section Photos */}
+      <div className="border-t pt-4">
+        <PhotoUpload
+          feuilleId={feuille.id}
+          readOnly={false}
+        />
+      </div>
 
       <div className="flex justify-end gap-3 pt-4 border-t">
         <button
