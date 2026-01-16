@@ -60,12 +60,8 @@ export const PhotoUpload = ({ feuilleId, readOnly = false }: PhotoUploadProps) =
             // It uses FormData.append, so array of Files is fine if we cast or if upload accepts it.
             // Let's verify fichierService signature but usually looping over array is easier.
 
-            // Hack to create a FileList compatible object or just pass array if service supports it
-            // Let's assume service might need adaptation or we create a DataTransfer
-            const dataTransfer = new DataTransfer()
-            filesToUpload.forEach(f => dataTransfer.items.add(f))
-
-            await fichierService.upload(dataTransfer.files, feuilleId, 'Photo chantier')
+            // Pass array directly as fichierService supports File[]
+            await fichierService.upload(filesToUpload, feuilleId, 'Photo chantier')
             showToast('Photo ajoutee avec succes', 'success')
             await fetchPhotos()
         } catch (error) {

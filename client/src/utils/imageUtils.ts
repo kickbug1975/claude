@@ -9,10 +9,17 @@ export const compressImage = async (file: File): Promise<File> => {
 
     try {
         const compressedFile = await imageCompression(file, options);
-        // Maintain original name and type if changed by library (usually library handles it well) - but let's be safe if needed. 
-        // Actually browser-image-compression returns a Blob/File with mostly correct props.
-        // Let's just return it.
-        return compressedFile;
+
+        // Ensure we return a File object with the original name and type
+        // browser-image-compression might return a Blob which lacks 'name' property
+        if (compressedFile instanceof Blob && !(compressedFile instanceof File)) {
+            return new File([compressedFile], file.name, {
+                type: (compressedFile as Blob).type,
+                lastModified: Date.now()
+            });
+        }
+
+        return compressedFile as File;
     } catch (error) {
         console.error('Erreur compression image:', error);
         return file; // Return original if compression fails
