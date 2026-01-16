@@ -108,9 +108,10 @@ export const Monteurs = () => {
       }
       handleCloseModal()
       await fetchData(pagination.page) // Rafraîchir la page actuelle
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur sauvegarde monteur:', error)
-      showToast('Erreur lors de la sauvegarde', 'error')
+      const errorMessage = error.response?.data?.message || 'Erreur lors de la sauvegarde'
+      showToast(errorMessage, 'error')
     } finally {
       setIsSubmitting(false)
     }
@@ -165,34 +166,33 @@ export const Monteurs = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredMonteurs.map((monteur) => (
-                <div key={monteur.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div key={monteur.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
+                    <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold shrink-0">
                       {monteur.prenom.charAt(0)}{monteur.nom.charAt(0)}
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-gray-900">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="font-semibold text-gray-900 truncate">
                           {monteur.prenom} {monteur.nom}
                         </h3>
-                        <span className={`px-2 py-0.5 text-xs rounded-full ${
-                          monteur.actif ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                        }`}>
+                        <span className={`px-2 py-0.5 text-xs rounded-full whitespace-nowrap ${monteur.actif ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                          }`}>
                           {monteur.actif ? 'Actif' : 'Inactif'}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-500">{monteur.numeroIdentification}</p>
+                      <p className="text-sm text-gray-500 truncate">{monteur.numeroIdentification}</p>
                     </div>
                   </div>
 
                   <div className="mt-4 space-y-2 text-sm">
                     <div className="flex items-center gap-2 text-gray-600">
-                      <Mail size={16} />
+                      <Mail size={16} className="shrink-0" />
                       <span className="truncate">{monteur.email}</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-600">
-                      <Phone size={16} />
-                      <span>{monteur.telephone}</span>
+                      <Phone size={16} className="shrink-0" />
+                      <span className="truncate">{monteur.telephone}</span>
                     </div>
                   </div>
 

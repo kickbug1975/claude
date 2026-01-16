@@ -282,6 +282,8 @@ Exploration complete du codebase pour identifier:
 | Notifications Toast | Feedback utilisateur apres actions | Haute | **FAIT** ✅ |
 | Pages de detail | Profil monteur, detail chantier | Basse | **FAIT** ✅ |
 | Pagination | Gestion des grandes listes (20 items/page) | Moyenne | **FAIT** ✅ |
+| **Mobile PWA** | Installation sur écran d'accueil, Manifest | Haute | **FAIT** ✅ |
+| **Vue Mobile** | Design adaptatif (Cartes vs Tableau) | Haute | **FAIT** ✅ |
 
 ### Securite & Production
 

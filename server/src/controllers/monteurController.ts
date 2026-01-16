@@ -98,6 +98,7 @@ export const getMonteurById = async (req: Request, res: Response) => {
 
 export const createMonteur = async (req: Request, res: Response) => {
   try {
+    logger.info('Tentative de création de monteur:', req.body)
     const validation = monteurSchema.safeParse(req.body)
 
     if (!validation.success) {

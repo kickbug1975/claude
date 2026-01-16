@@ -17,7 +17,7 @@ const loadImage = (url: string): Promise<string> => {
       const ctx = canvas.getContext('2d')
       if (ctx) {
         ctx.drawImage(img, 0, 0)
-        resolve(canvas.toDataURL('image/png'))
+        resolve(canvas.toDataURL('image/png')) // Convertit tout en PNG pour compatibilité
       } else {
         reject(new Error('Impossible de créer le contexte canvas'))
       }
@@ -27,17 +27,24 @@ const loadImage = (url: string): Promise<string> => {
   })
 }
 
+const getFullUrl = (url?: string) => {
+  if (!url) return ''
+  if (url.startsWith('http')) return url
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+  return `${baseUrl}${url}`
+}
+
 export const exportFeuilleToPDF = async (feuille: FeuilleTravail, companyInfo?: any) => {
   const doc = new jsPDF()
 
   const pageWidth = doc.internal.pageSize.getWidth()
+  const pageHeight = doc.internal.pageSize.getHeight()
   let y = 20
 
   // 1. Logo et Header
   if (companyInfo?.companyLogoUrl) {
     try {
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000'
-      const logoUrl = `${baseUrl}${companyInfo.companyLogoUrl}`
+      const logoUrl = getFullUrl(companyInfo.companyLogoUrl)
 
       const imgData = await loadImage(logoUrl)
       // Ratio 2:1 pour le logo, hauteur 20mm
@@ -235,8 +242,77 @@ export const exportFeuilleToPDF = async (feuille: FeuilleTravail, companyInfo?: 
   doc.setFont('helvetica', 'normal')
   doc.text(feuille.statut, 60, y)
 
-  // Pied de page
-  const pageHeight = doc.internal.pageSize.getHeight()
+
+  // 6. Photos
+  if (feuille.fichiers && feuille.fichiers.length > 0) {
+    // Filtrer pour ne garder que les images
+    const photos = feuille.fichiers.filter(f => f.mimeType.startsWith('image/'))
+
+    if (photos.length > 0) {
+      doc.addPage()
+      y = 20
+
+      doc.setFontSize(14)
+      doc.setFont('helvetica', 'bold')
+      doc.text(`Photos du chantier (${photos.length})`, 20, y)
+      y += 15
+
+      const imageWidth = 80
+      const imageHeight = 60
+      const margin = 10
+
+      for (let i = 0; i < photos.length; i++) {
+        const photo = photos[i]
+        try {
+          const fullUrl = getFullUrl(photo.downloadUrl || photo.url)
+          const imgData = await loadImage(fullUrl)
+
+          let x = 20
+          // Gestion de la position (2 colonnes)
+          if (i % 2 === 1) {
+            x = 20 + imageWidth + margin
+          } else {
+            // Nouvelle ligne (sauf la toute première)
+            if (i > 0) {
+              y += imageHeight + 15
+            }
+
+            // Si on dépasse la page, on en crée une nouvelle
+            if (y + imageHeight > pageHeight - 20) {
+              doc.addPage()
+              y = 20
+            }
+          }
+
+          // Afficher l'image
+          doc.addImage(imgData, 'JPEG', x, y, imageWidth, imageHeight)
+
+          // Légende (Nom fichier + Date)
+          doc.setFontSize(8)
+          doc.setFont('helvetica', 'normal')
+          const nom = photo.nom.length > 25 ? photo.nom.substring(0, 22) + '...' : photo.nom
+          doc.text(nom, x, y + imageHeight + 5)
+          const date = new Date(photo.createdAt).toLocaleDateString('fr-FR')
+          doc.text(date, x + imageWidth - 15, y + imageHeight + 5)
+
+        } catch (err) {
+          console.error('Erreur image PDF:', err)
+          const x = (i % 2 === 1) ? 20 + imageWidth + margin : 20
+
+          if (i % 2 === 0 && i > 0) {
+            y += imageHeight + 15
+          }
+
+          doc.rect(x, y, imageWidth, imageHeight)
+          doc.setFontSize(8)
+          doc.text(`Erreur image`, x + 5, y + 30)
+        }
+      }
+    }
+  }
+
+
+  // Pied de page sur la dernière page
   doc.setFontSize(8)
   doc.setFont('helvetica', 'italic')
   doc.text(

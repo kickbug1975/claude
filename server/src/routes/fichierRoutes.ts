@@ -109,7 +109,7 @@ router.get('/:id', getFileById)
  *       200:
  *         description: Fichier supprimé
  */
-router.delete('/:id', authorize('ADMIN', 'SUPERVISEUR'), deleteFile)
+router.delete('/:id', authorize('ADMIN', 'SUPERVISEUR', 'MONTEUR'), deleteFile)
 
 /**
  * @swagger

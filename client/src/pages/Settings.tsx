@@ -4,17 +4,14 @@ import {
     Building2,
     Image as ImageIcon,
     Upload,
-    CheckCircle2,
     Loader2,
     X,
     UserPlus,
     Briefcase,
-    Save,
-    AlertCircle
+    Save
 } from 'lucide-react'
 import { setupService } from '../services/setupService'
 import { useToast } from '../components/Toast'
-import { useAuthStore } from '../store/authStore'
 import Papa from 'papaparse'
 
 interface CompanyFormData {
@@ -36,7 +33,6 @@ export const Settings = () => {
     const [chantiersData, setChantiersData] = useState<any[]>([])
 
     const { showToast } = useToast()
-    const { checkSetup } = useAuthStore()
     const { register, handleSubmit, formState: { errors }, reset } = useForm<CompanyFormData>()
 
     useEffect(() => {

@@ -104,6 +104,7 @@ export const getFeuilleById = async (req: Request, res: Response) => {
         monteur: true,
         chantier: true,
         frais: true,
+        fichiers: true,
         validePar: { select: { email: true, role: true } },
       },
     })

@@ -36,14 +36,17 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md' }: ModalPr
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className={`relative bg-white rounded-lg shadow-xl w-full ${sizeClasses[size]} mx-4 max-h-[90vh] flex flex-col`}>
-        <div className="flex items-center justify-between p-4 border-b">
+      <div className={`relative bg-white w-full flex flex-col shadow-xl 
+        md:rounded-lg md:mx-4 md:max-h-[90vh] md:h-auto ${sizeClasses[size]}
+        h-full max-h-[100dvh] rounded-none sm:rounded-lg sm:mx-4 sm:h-auto
+      `}>
+        <div className="flex items-center justify-between p-4 border-b shrink-0">
           <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
           <button
             onClick={onClose}
             className="p-1 rounded-lg hover:bg-gray-100 text-gray-500"
           >
-            <X size={20} />
+            <X size={24} />
           </button>
         </div>
         <div className="p-4 overflow-y-auto">{children}</div>

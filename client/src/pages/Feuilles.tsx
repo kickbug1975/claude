@@ -213,71 +213,123 @@ export const Feuilles = () => {
             <p className="text-gray-500">Aucune feuille de travail trouvee</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="text-left text-sm text-gray-500 border-b bg-gray-50">
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Monteur</th>
-                  <th className="px-4 py-3">Chantier</th>
-                  <th className="px-4 py-3">Horaires</th>
-                  <th className="px-4 py-3">Heures</th>
-                  <th className="px-4 py-3">Frais</th>
-                  <th className="px-4 py-3">Statut</th>
-                  <th className="px-4 py-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredFeuilles.map((feuille) => (
-                  <tr key={feuille.id} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-3">{formatDate(feuille.dateTravail)}</td>
-                    <td className="px-4 py-3">
-                      <div>
-                        <p className="font-medium">{feuille.monteur?.prenom} {feuille.monteur?.nom}</p>
-                        <p className="text-xs text-gray-500">{feuille.monteur?.numeroIdentification}</p>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div>
-                        <p className="font-medium">{feuille.chantier?.nom}</p>
-                        <p className="text-xs text-gray-500">{feuille.chantier?.reference}</p>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-sm">{feuille.heureDebut} - {feuille.heureFin}</span>
-                    </td>
-                    <td className="px-4 py-3">{feuille.heuresTotales}h</td>
-                    <td className="px-4 py-3">{calculateTotalFrais(feuille.frais).toFixed(2)} EUR</td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-sm ${getStatusBadge(feuille.statut)}`}>
-                        {feuille.statut}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleOpenModal(feuille, true)}
-                          className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm"
-                        >
-                          <Eye size={16} />
-                          Voir
-                        </button>
-                        {canEdit(feuille) && (
-                          <button
-                            onClick={() => handleOpenModal(feuille, false)}
-                            className="flex items-center gap-1 text-green-600 hover:text-green-800 text-sm"
-                          >
-                            <Edit2 size={16} />
-                            Modifier
-                          </button>
-                        )}
-                      </div>
-                    </td>
+          <>
+            {/* Vue Desktop: Tableau */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left text-sm text-gray-500 border-b bg-gray-50">
+                    <th className="px-4 py-3">Date</th>
+                    <th className="px-4 py-3">Monteur</th>
+                    <th className="px-4 py-3">Chantier</th>
+                    <th className="px-4 py-3">Horaires</th>
+                    <th className="px-4 py-3">Heures</th>
+                    <th className="px-4 py-3">Frais</th>
+                    <th className="px-4 py-3">Statut</th>
+                    <th className="px-4 py-3">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filteredFeuilles.map((feuille) => (
+                    <tr key={feuille.id} className="border-b hover:bg-gray-50">
+                      <td className="px-4 py-3">{formatDate(feuille.dateTravail)}</td>
+                      <td className="px-4 py-3">
+                        <div>
+                          <p className="font-medium">{feuille.monteur?.prenom} {feuille.monteur?.nom}</p>
+                          <p className="text-xs text-gray-500">{feuille.monteur?.numeroIdentification}</p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div>
+                          <p className="font-medium">{feuille.chantier?.nom}</p>
+                          <p className="text-xs text-gray-500">{feuille.chantier?.reference}</p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-sm">{feuille.heureDebut} - {feuille.heureFin}</span>
+                      </td>
+                      <td className="px-4 py-3">{feuille.heuresTotales}h</td>
+                      <td className="px-4 py-3">{calculateTotalFrais(feuille.frais).toFixed(2)} EUR</td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-1 rounded-full text-sm ${getStatusBadge(feuille.statut)}`}>
+                          {feuille.statut}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleOpenModal(feuille, true)}
+                            className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm"
+                          >
+                            <Eye size={16} />
+                            Voir
+                          </button>
+                          {canEdit(feuille) && (
+                            <button
+                              onClick={() => handleOpenModal(feuille, false)}
+                              className="flex items-center gap-1 text-green-600 hover:text-green-800 text-sm"
+                            >
+                              <Edit2 size={16} />
+                              Modifier
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Vue Mobile: Cartes */}
+            <div className="md:hidden space-y-4 p-4">
+              {filteredFeuilles.map((feuille) => (
+                <div key={feuille.id} className="bg-white border rounded-lg p-4 space-y-3 shadow-sm">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-bold text-gray-900">{formatDate(feuille.dateTravail)}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {feuille.heureDebut} - {feuille.heureFin} • {feuille.heuresTotales}h
+                      </p>
+                    </div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(feuille.statut)}`}>
+                      {feuille.statut}
+                    </span>
+                  </div>
+
+                  <div className="pt-2 border-t border-gray-100">
+                    <h3 className="font-semibold text-gray-800">{feuille.chantier?.nom}</h3>
+                    <p className="text-xs text-gray-500">{feuille.chantier?.reference}</p>
+                    <div className="flex items-center gap-2 mt-2 text-sm text-gray-600">
+                      <div className="flex flex-col">
+                        <span className="text-xs text-gray-400">Monteur</span>
+                        <span className="font-medium">{feuille.monteur?.prenom} {feuille.monteur?.nom}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-gray-100 flex gap-2">
+                    <button
+                      onClick={() => handleOpenModal(feuille, true)}
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gray-50 text-blue-600 rounded-lg hover:bg-blue-50 text-sm font-medium transition-colors"
+                    >
+                      <Eye size={16} />
+                      Détails
+                    </button>
+                    {canEdit(feuille) && (
+                      <button
+                        onClick={() => handleOpenModal(feuille, false)}
+                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 text-sm font-medium transition-colors"
+                      >
+                        <Edit2 size={16} />
+                        Modifier
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
 
         {!loading && filteredFeuilles.length > 0 && (
