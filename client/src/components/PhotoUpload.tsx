@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Camera, Upload, Loader2, Image as ImageIcon, Trash2 } from 'lucide-react'
 import { Fichier, fichierService } from '../services/fichierService'
 import { useToast } from './Toast'
+import { compressImage } from '../utils/imageUtils'
 
 interface PhotoUploadProps {
     feuilleId: string
@@ -39,7 +40,32 @@ export const PhotoUpload = ({ feuilleId, readOnly = false }: PhotoUploadProps) =
 
         setUploading(true)
         try {
-            await fichierService.upload(e.target.files, feuilleId, 'Photo chantier')
+            // Compresser toutes les images sélectionnées
+            const filesToUpload: File[] = []
+            for (let i = 0; i < e.target.files.length; i++) {
+                const file = e.target.files[i]
+                try {
+                    console.log(`Compression de ${file.name} (${(file.size / 1024).toFixed(0)} KB)...`)
+                    const compressed = await compressImage(file)
+                    console.log(`Compresse : ${(compressed.size / 1024).toFixed(0)} KB`)
+                    filesToUpload.push(compressed)
+                } catch (err) {
+                    console.warn('Echec compression, utilisation fichier original', err)
+                    filesToUpload.push(file)
+                }
+            }
+
+            // Convert to FileList-like object if service requires it, or update service to accept File[]
+            // fichierService.upload expects FileList usually but checking usage... 
+            // It uses FormData.append, so array of Files is fine if we cast or if upload accepts it.
+            // Let's verify fichierService signature but usually looping over array is easier.
+
+            // Hack to create a FileList compatible object or just pass array if service supports it
+            // Let's assume service might need adaptation or we create a DataTransfer
+            const dataTransfer = new DataTransfer()
+            filesToUpload.forEach(f => dataTransfer.items.add(f))
+
+            await fichierService.upload(dataTransfer.files, feuilleId, 'Photo chantier')
             showToast('Photo ajoutee avec succes', 'success')
             await fetchPhotos()
         } catch (error) {
