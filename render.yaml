@@ -1,0 +1,47 @@
+services:
+  # Service Web (Backend)
+  - type: web
+    name: claude-backend
+    runtime: node
+    env: node
+    region: frankfurt
+    plan: free
+    buildCommand: cd server && npm install && npx prisma generate && npm run build
+    startCommand: cd server && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: claude-postgres-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: CLIENT_URL
+        value: https://claude-frontend.onrender.com
+      - key: PORT
+        value: 5000
+
+  # Service Frontend (si nécessaire)
+  - type: web
+    name: claude-frontend
+    runtime: static
+    env: static
+    region: frankfurt
+    plan: free
+    buildCommand: cd client && npm install && npm run build
+    staticPublishPath: client/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://claude-backend.onrender.com
+
+# Base de données PostgreSQL
+databases:
+  - name: claude-postgres-db
+    databaseName: maintenance_db
+    user: postgres
+    plan: free
+    region: frankfurt
+    ipAllowList: []
