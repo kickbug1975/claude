@@ -8,6 +8,7 @@ import { logger, morganStream } from './utils/logger';
 import { prisma } from './config/prisma';
 import { generateCsrfToken } from './middlewares/csrf';
 import setupRoutes from './routes/setupRoutes';
+import authRoutes from './routes/authRoutes';
 
 const app = express();
 const PORT = env.port;
@@ -30,6 +31,9 @@ app.use('/api', limiter);
 
 // CSRF Token Endpoint
 app.get('/api/csrf-token', generateCsrfToken);
+
+// Auth Routes
+app.use('/api/auth', authRoutes);
 
 // Setup Routes (handling both /setup and /api/setup/status depending on frontend)
 app.use('/setup', setupRoutes);

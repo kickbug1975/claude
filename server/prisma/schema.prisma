@@ -10,6 +10,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
 // Modèle Utilisateur
 model User {
   id        String   @id @default(uuid())
@@ -19,8 +20,57 @@ model User {
   role      Role     @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  // Relations
+  monteurId String?   @unique
+  monteur   Monteur?  @relation(fields: [monteurId], references: [id])
+  refreshTokens RefreshToken[]
+  resetTokens   ResetToken[]
 
   @@map("users")
+}
+
+// Modèle Monteur
+model Monteur {
+  id                    String   @id @default(uuid())
+  nom                   String
+  prenom                String
+  telephone             String
+  email                 String   @unique
+  adresse               String
+  dateEmbauche          DateTime
+  numeroIdentification  String   @unique
+  actif                 Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  user                  User?
+
+  @@map("monteurs")
+}
+
+// Token de rafraîchissement
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+// Token de réinitialisation de mot de passe
+model ResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("reset_tokens")
 }
 
 // Enum pour les rôles
@@ -28,6 +78,8 @@ enum Role {
   USER
   ADMIN
   MODERATOR
+  SUPERVISEUR
+  MONTEUR
 }
 
 // Exemple de modèle pour une application de maintenance
