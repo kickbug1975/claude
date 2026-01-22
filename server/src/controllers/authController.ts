@@ -132,6 +132,7 @@ export const register = async (req: Request, res: Response) => {
                 email,
                 password: hashedPassword,
                 role: role || 'MONTEUR',
+                name: email.split('@')[0], // Provide default name as required by schema
             },
         });
 
@@ -175,7 +176,7 @@ export const me = async (req: Request, res: Response) => {
         }
 
         const user = await prisma.user.findUnique({
-            where: { id: req.user.userId },
+            where: { id: Number(req.user.userId) }, // Cast to Number
             include: { monteur: true },
         });
 
@@ -276,7 +277,7 @@ export const logoutAll = async (req: Request, res: Response) => {
             });
         }
 
-        await revokeAllUserRefreshTokens(req.user.userId);
+        await revokeAllUserRefreshTokens(Number(req.user.userId));
 
         return res.status(200).json({
             success: true,
@@ -332,7 +333,7 @@ export const changePassword = async (req: Request, res: Response) => {
         const { oldPassword, newPassword } = validation.data;
 
         const user = await prisma.user.findUnique({
-            where: { id: req.user.userId },
+            where: { id: Number(req.user.userId) }, // Cast to Number
         });
 
         if (!user) {

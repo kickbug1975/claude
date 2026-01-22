@@ -7,7 +7,7 @@ const REFRESH_TOKEN_EXPIRY_DAYS = 7;
 /**
  * Génère un nouveau refresh token pour un utilisateur
  */
-export const generateRefreshToken = async (userId: string): Promise<string> => {
+export const generateRefreshToken = async (userId: number): Promise<string> => {
     // Générer un token aléatoire sécurisé
     const token = randomBytes(64).toString('hex');
 
@@ -65,7 +65,7 @@ export const revokeRefreshToken = async (token: string): Promise<void> => {
 /**
  * Révoque tous les refresh tokens d'un utilisateur
  */
-export const revokeAllUserRefreshTokens = async (userId: string): Promise<void> => {
+export const revokeAllUserRefreshTokens = async (userId: number): Promise<void> => {
     await prisma.refreshToken.deleteMany({
         where: { userId },
     });
@@ -88,7 +88,7 @@ export const cleanExpiredRefreshTokens = async (): Promise<number> => {
 /**
  * Obtient tous les refresh tokens actifs d'un utilisateur
  */
-export const getUserRefreshTokens = async (userId: string) => {
+export const getUserRefreshTokens = async (userId: number) => {
     return await prisma.refreshToken.findMany({
         where: {
             userId,

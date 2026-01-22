@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,27 +7,120 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// --- Existing Models from Routing App ---
 
-// Modèle Utilisateur
+model Client {
+  id         Int      @id @default(autoincrement())
+  code       String?  @unique
+  name       String
+  street     String?
+  number     String?
+  postalCode String?
+  city       String?
+  country    String?
+  address    String
+  lat        Float?
+  lng        Float?
+  phone      String?
+  mobile     String?
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  isPriority Boolean  @default(false)
+  email      String?
+}
+
+model Driver {
+  id                 Int          @id @default(autoincrement())
+  userId             Int          @unique
+  licenseNumber      String?
+  phone              String?
+  hourlyRate         Float?       @default(0)
+  currentLat         Float?
+  currentLng         Float?
+  lastLocationUpdate DateTime?
+  User               User         @relation(fields: [userId], references: [id])
+  Route              Route[]
+  TripReport         TripReport[]
+}
+
+model MaintenanceLog {
+  id          Int      @id @default(autoincrement())
+  vehicleId   Int
+  description String
+  cost        Float?
+  date        DateTime @default(now())
+  resolved    Boolean  @default(false)
+  Vehicle     Vehicle  @relation(fields: [vehicleId], references: [id])
+}
+
+model Route {
+  id                 Int         @id @default(autoincrement())
+  driverId           Int
+  vehicleId          Int?
+  date               DateTime
+  stops              Json
+  status             RouteStatus @default(PENDING)
+  estimatedKm        Int?
+  actualKm           Int?
+  notes              String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  actualCost         Float?
+  actualDuration     Int?
+  estimatedCost      Float?
+  estimatedDuration  Int?
+  actualStartTime    DateTime?
+  scheduledStartTime String?
+  Driver             Driver      @relation(fields: [driverId], references: [id])
+  Vehicle            Vehicle?    @relation(fields: [vehicleId], references: [id])
+}
+
+model TripReport {
+  id           Int      @id @default(autoincrement())
+  driverId     Int
+  date         DateTime @default(now())
+  content      String
+  vehicleIssue Boolean  @default(false)
+  Driver       Driver   @relation(fields: [driverId], references: [id])
+}
+
+model Vehicle {
+  id              Int              @id @default(autoincrement())
+  model           String
+  licensePlate    String           @unique
+  currentKm       Int
+  status          String           @default("ACTIVE")
+  fuelConsumption Float?           @default(10)
+  costPerKm       Float?           @default(0.25)
+  MaintenanceLog  MaintenanceLog[]
+  Route           Route[]
+}
+
+// --- Merged User Model ---
+
 model User {
-  id        String   @id @default(uuid())
+  id        Int      @id @default(autoincrement())
   email     String   @unique
   password  String
-  name      String?
-  role      Role     @default(USER)
+  role      Role     @default(DRIVER)
+  name      String?  // Made optional for compatibility
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
-  // Relations
+  // Existing Relations
+  Driver    Driver?
+
+  // New Relations for Maintenance App
   monteurId String?   @unique
   monteur   Monteur?  @relation(fields: [monteurId], references: [id])
   refreshTokens RefreshToken[]
   resetTokens   ResetToken[]
-
-  @@map("users")
 }
 
-// Modèle Monteur
+// --- New Models for Maintenance App ---
+
 model Monteur {
   id                    String   @id @default(uuid())
   nom                   String
@@ -49,11 +139,10 @@ model Monteur {
   @@map("monteurs")
 }
 
-// Token de rafraîchissement
 model RefreshToken {
   id        String   @id @default(uuid())
   token     String   @unique
-  userId    String
+  userId    Int      // Int to match User.id
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   createdAt DateTime @default(now())
@@ -61,11 +150,10 @@ model RefreshToken {
   @@map("refresh_tokens")
 }
 
-// Token de réinitialisation de mot de passe
 model ResetToken {
   id        String   @id @default(uuid())
   token     String   @unique
-  userId    String
+  userId    Int      // Int to match User.id
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   createdAt DateTime @default(now())
@@ -73,16 +161,6 @@ model ResetToken {
   @@map("reset_tokens")
 }
 
-// Enum pour les rôles
-enum Role {
-  USER
-  ADMIN
-  MODERATOR
-  SUPERVISEUR
-  MONTEUR
-}
-
-// Exemple de modèle pour une application de maintenance
 model MaintenanceTask {
   id          String   @id @default(uuid())
   title       String
@@ -95,6 +173,24 @@ model MaintenanceTask {
   completedAt DateTime?
 
   @@map("maintenance_tasks")
+}
+
+// --- Enums ---
+
+enum Role {
+  ADMIN
+  DRIVER
+  USER
+  MODERATOR
+  SUPERVISEUR
+  MONTEUR
+}
+
+enum RouteStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
 }
 
 enum TaskStatus {
