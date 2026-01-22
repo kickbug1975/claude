@@ -6,6 +6,8 @@ import rateLimit from 'express-rate-limit';
 import { env } from './config/env';
 import { logger, morganStream } from './utils/logger';
 import { prisma } from './config/prisma';
+import { generateCsrfToken } from './middlewares/csrf';
+import setupRoutes from './routes/setupRoutes';
 
 const app = express();
 const PORT = env.port;
@@ -25,6 +27,13 @@ const limiter = rateLimit({
     legacyHeaders: false,
 });
 app.use('/api', limiter);
+
+// CSRF Token Endpoint
+app.get('/api/csrf-token', generateCsrfToken);
+
+// Setup Routes (handling both /setup and /api/setup/status depending on frontend)
+app.use('/setup', setupRoutes);
+app.use('/api/setup', setupRoutes);
 
 // Health Check Route
 app.get('/health', async (req, res) => {
@@ -50,22 +59,23 @@ app.get('/health', async (req, res) => {
 app.get('/', (req, res) => {
     res.json({
         message: 'Claude API Server is running',
-        docs: '/health'
+        endpoints: {
+            health: '/health',
+            csrf: '/api/csrf-token',
+            setup: '/setup/status'
+        }
     });
 });
 
 // Start Server
 const startServer = async () => {
     try {
-        // Log startup info
         logger.info('Starting server...');
 
-        // Listen first, connect DB later/parallel to avoid startup timeout if DB is slow
         app.listen(PORT, '0.0.0.0', () => {
             logger.info(`Server running on port ${PORT}`);
         });
 
-        // Try DB connection
         try {
             await prisma.$connect();
             logger.info('Database connection established');
