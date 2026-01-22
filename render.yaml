@@ -20,7 +20,7 @@ services:
       - key: JWT_EXPIRES_IN
         value: 7d
       - key: CLIENT_URL
-        value: https://claude-frontend.netlify.app
+        value: https://zippy-profiterole-b67c51.netlify.app
       - key: PORT
         value: 5000
 
