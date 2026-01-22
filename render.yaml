@@ -35,7 +35,7 @@ services:
     staticPublishPath: client/dist
     envVars:
       - key: VITE_API_URL
-        value: https://claude-backend.onrender.com
+        value: https://claude-pofd.onrender.com
 
 # Base de données PostgreSQL
 databases:
