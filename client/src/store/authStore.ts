@@ -38,7 +38,7 @@ export const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null })
         try {
-          const response = await api.post('/auth/login', { email, password })
+          const response = await api.post('/api/auth/login', { email, password })
           const { user, token, refreshToken } = response.data.data
 
           localStorage.setItem('token', token)
@@ -69,7 +69,7 @@ export const useAuthStore = create<AuthState>()(
         // Révoquer le refresh token côté serveur
         if (refreshToken) {
           try {
-            await api.post('/auth/logout', { refreshToken })
+            await api.post('/api/auth/logout', { refreshToken })
           } catch (error) {
             console.error('Erreur lors de la révocation du token:', error)
           }
@@ -98,7 +98,7 @@ export const useAuthStore = create<AuthState>()(
         }
 
         try {
-          const response = await api.post('/auth/refresh', { refreshToken })
+          const response = await api.post('/api/auth/refresh', { refreshToken })
           const { token: newToken, refreshToken: newRefreshToken } = response.data.data
 
           localStorage.setItem('token', newToken)
@@ -128,7 +128,7 @@ export const useAuthStore = create<AuthState>()(
         }
 
         try {
-          const response = await api.get('/auth/me')
+          const response = await api.get('/api/auth/me')
           const user = response.data.data
           set({
             user,
@@ -176,7 +176,7 @@ export const useAuthStore = create<AuthState>()(
 
       checkSetup: async () => {
         try {
-          const response = await api.get('/setup/status')
+          const response = await api.get('/api/setup/status')
           set({ isSetupComplete: response.data.data.isSetupComplete })
         } catch (error) {
           console.error('Erreur checkSetup:', error)
@@ -185,7 +185,7 @@ export const useAuthStore = create<AuthState>()(
 
       initialCheck: async () => {
         try {
-          const response = await api.get('/setup/status')
+          const response = await api.get('/api/setup/status')
           set({ isSetupComplete: response.data.data.isSetupComplete })
         } catch (error) {
           console.error('Erreur initialCheck:', error)
