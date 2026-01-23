@@ -212,6 +212,14 @@ const SuperviseurDashboard = () => {
   const rejetees = feuilles.filter((f) => f.statut === 'REJETE').length
   const heuresTotal = feuilles.reduce((acc, f) => acc + (f.heuresMatin + f.heuresApresMidi), 0)
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="animate-spin text-blue-600" size={48} />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold text-gray-900">Vue Superviseur</h2>
