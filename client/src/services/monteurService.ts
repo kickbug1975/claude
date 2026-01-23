@@ -8,7 +8,7 @@ export const monteurService = {
     if (page !== undefined) params.page = page
     if (limit !== undefined) params.limit = limit
 
-    const response = await api.get('/monteurs', { params })
+    const response = await api.get('/api/monteurs', { params })
 
     // Support nouveau format paginé
     if (response.data.pagination) {
@@ -23,7 +23,7 @@ export const monteurService = {
   },
 
   getById: async (id: string) => {
-    const response = await api.get(`/monteurs/${id}`)
+    const response = await api.get(`/api/monteurs/${id}`)
     return response.data.data
   },
 
@@ -31,22 +31,22 @@ export const monteurService = {
     const params: any = {}
     if (mois) params.mois = mois
     if (annee) params.annee = annee
-    const response = await api.get(`/monteurs/${id}/stats`, { params })
+    const response = await api.get(`/api/monteurs/${id}/stats`, { params })
     return response.data.data
   },
 
   create: async (data: Partial<Monteur>) => {
-    const response = await api.post('/monteurs', data)
+    const response = await api.post('/api/monteurs', data)
     return response.data.data
   },
 
   update: async (id: string, data: Partial<Monteur>) => {
-    const response = await api.put(`/monteurs/${id}`, data)
+    const response = await api.put(`/api/monteurs/${id}`, data)
     return response.data.data
   },
 
   delete: async (id: string) => {
-    const response = await api.delete(`/monteurs/${id}`)
+    const response = await api.delete(`/api/monteurs/${id}`)
     return response.data
   },
 }

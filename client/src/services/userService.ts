@@ -7,27 +7,27 @@ export interface AuthUser extends User {
 
 export const userService = {
     getAll: async () => {
-        const response = await api.get('/users')
+        const response = await api.get('/api/users')
         return response.data.data
     },
 
     getById: async (id: string) => {
-        const response = await api.get(`/users/${id}`)
+        const response = await api.get(`/api/users/${id}`)
         return response.data.data
     },
 
     create: async (data: any) => {
-        const response = await api.post('/users', data)
+        const response = await api.post('/api/users', data)
         return response.data.data
     },
 
     update: async (id: string, data: any) => {
-        const response = await api.patch(`/users/${id}`, data)
+        const response = await api.patch(`/api/users/${id}`, data)
         return response.data.data
     },
 
     delete: async (id: string) => {
-        const response = await api.delete(`/users/${id}`)
+        const response = await api.delete(`/api/users/${id}`)
         return response.data.data
     },
 }

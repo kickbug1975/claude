@@ -19,7 +19,7 @@ export const feuilleService = {
     // Si en ligne, on essaie de récupérer et mettre en cache
     if (syncService.getOnlineStatus()) {
       try {
-        const response = await api.get('/feuilles', { params: filters })
+        const response = await api.get('/api/feuilles', { params: filters })
         const data = response.data.pagination ? response.data.data : response.data.data
 
         // Mise en cache (upsert pour ne pas écraser les items locaux non synchronisés)
@@ -69,7 +69,7 @@ export const feuilleService = {
   getById: async (id: string) => {
     if (syncService.getOnlineStatus()) {
       try {
-        const response = await api.get(`/feuilles/${id}`)
+        const response = await api.get(`/api/feuilles/${id}`)
         return response.data.data as FeuilleTravail
       } catch (e) {
         console.warn('Fetch error, trying cache')
@@ -83,7 +83,7 @@ export const feuilleService = {
   create: async (data: Partial<FeuilleTravail> & { frais?: Partial<Frais>[] }) => {
     if (syncService.getOnlineStatus()) {
       try {
-        const response = await api.post('/feuilles', data)
+        const response = await api.post('/api/feuilles', data)
         const newItem = { ...response.data.data, syncStatus: 'synced' }
         await db.feuilles.put(newItem)
         return newItem
@@ -111,7 +111,7 @@ export const feuilleService = {
   update: async (id: string, data: Partial<FeuilleTravail>) => {
     if (syncService.getOnlineStatus()) {
       try {
-        const response = await api.put(`/feuilles/${id}`, data)
+        const response = await api.put(`/api/feuilles/${id}`, data)
         // Update local cache
         const updatedItem = { ...response.data.data, syncStatus: 'synced' }
         await db.feuilles.put(updatedItem)
@@ -134,32 +134,32 @@ export const feuilleService = {
   },
 
   delete: async (id: string) => {
-    const response = await api.delete(`/feuilles/${id}`)
+    const response = await api.delete(`/api/feuilles/${id}`)
     return response.data
   },
 
   submit: async (id: string) => {
-    const response = await api.post(`/feuilles/${id}/submit`)
+    const response = await api.post(`/api/feuilles/${id}/submit`)
     return response.data.data
   },
 
   validate: async (id: string) => {
-    const response = await api.post(`/feuilles/${id}/validate`)
+    const response = await api.post(`/api/feuilles/${id}/validate`)
     return response.data.data
   },
 
   reject: async (id: string) => {
-    const response = await api.post(`/feuilles/${id}/reject`)
+    const response = await api.post(`/api/feuilles/${id}/reject`)
     return response.data.data
   },
 
   addFrais: async (feuilleId: string, frais: Partial<Frais>) => {
-    const response = await api.post(`/feuilles/${feuilleId}/frais`, frais)
+    const response = await api.post(`/api/feuilles/${feuilleId}/frais`, frais)
     return response.data.data
   },
 
   deleteFrais: async (feuilleId: string, fraisId: string) => {
-    const response = await api.delete(`/feuilles/${feuilleId}/frais/${fraisId}`)
+    const response = await api.delete(`/api/feuilles/${feuilleId}/frais/${fraisId}`)
     return response.data
   },
 }

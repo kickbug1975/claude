@@ -8,7 +8,7 @@ export const chantierService = {
     if (page !== undefined) params.page = page
     if (limit !== undefined) params.limit = limit
 
-    const response = await api.get('/chantiers', { params })
+    const response = await api.get('/api/chantiers', { params })
 
     // Support nouveau format paginé
     if (response.data.pagination) {
@@ -23,27 +23,27 @@ export const chantierService = {
   },
 
   getById: async (id: string) => {
-    const response = await api.get(`/chantiers/${id}`)
+    const response = await api.get(`/api/chantiers/${id}`)
     return response.data.data
   },
 
   getStats: async (id: string) => {
-    const response = await api.get(`/chantiers/${id}/stats`)
+    const response = await api.get(`/api/chantiers/${id}/stats`)
     return response.data.data
   },
 
   create: async (data: Partial<Chantier>) => {
-    const response = await api.post('/chantiers', data)
+    const response = await api.post('/api/chantiers', data)
     return response.data.data
   },
 
   update: async (id: string, data: Partial<Chantier>) => {
-    const response = await api.put(`/chantiers/${id}`, data)
+    const response = await api.put(`/api/chantiers/${id}`, data)
     return response.data.data
   },
 
   delete: async (id: string) => {
-    const response = await api.delete(`/chantiers/${id}`)
+    const response = await api.delete(`/api/chantiers/${id}`)
     return response.data
   },
 }

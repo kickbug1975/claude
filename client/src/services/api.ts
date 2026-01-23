@@ -81,7 +81,7 @@ api.interceptors.response.use(
       if (refreshToken && originalRequest.url !== '/auth/refresh') {
         try {
           // Rafraîchir le token
-          const response = await api.post('/auth/refresh', { refreshToken })
+          const response = await api.post('/api/auth/refresh', { refreshToken })
           const { token: newToken, refreshToken: newRefreshToken } = response.data.data
 
           // Sauvegarder les nouveaux tokens

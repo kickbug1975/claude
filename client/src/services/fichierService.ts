@@ -24,7 +24,7 @@ export const fichierService = {
       formData.append('description', description)
     }
 
-    const response = await api.post('/fichiers/upload', formData, {
+    const response = await api.post('/api/fichiers/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -36,13 +36,13 @@ export const fichierService = {
   getByFeuille: async (feuilleId: string) => {
     // Note: Le backend utilise /fichiers/feuille/:feuilleId ou quelque chose de similaire
     // Vérifions les routes backend (j'assumerai la route standard REST)
-    const response = await api.get(`/fichiers/feuille/${feuilleId}`)
+    const response = await api.get(`/api/fichiers/feuille/${feuilleId}`)
     return response.data.data as Fichier[]
   },
 
   // Supprimer un fichier
   delete: async (id: string) => {
-    const response = await api.delete(`/fichiers/${id}`)
+    const response = await api.delete(`/api/fichiers/${id}`)
     return response.data
   }
 }
