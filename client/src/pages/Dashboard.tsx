@@ -4,13 +4,10 @@ import { feuilleService } from '../services/feuilleService'
 import { analyticsService } from '../services/analyticsService'
 import { FeuilleTravail } from '../types'
 import {
-  FileText,
   Clock,
   CheckCircle,
   XCircle,
-  Users,
   Building2,
-  TrendingUp,
   AlertCircle,
   Loader2,
   Euro
@@ -18,23 +15,6 @@ import {
 import StatCard from '../components/dashboard/StatCard'
 import ProdChart from '../components/dashboard/ProdChart'
 import { Link } from 'react-router-dom'
-
-const getStatusBadge = (statut: string) => {
-  switch (statut) {
-    case 'VALIDE':
-      return 'bg-green-100 text-green-700'
-    case 'SOUMIS':
-      return 'bg-yellow-100 text-yellow-700'
-    case 'REJETE':
-      return 'bg-red-100 text-red-700'
-    default:
-      return 'bg-gray-100 text-gray-700'
-  }
-}
-
-const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString('fr-FR')
-}
 
 // Interfaces pour les données Analytics
 interface DashboardSummary {
@@ -227,9 +207,6 @@ const SuperviseurDashboard = () => {
     fetchData()
   }, [])
 
-  // Utilisation des nouveaux StatCard mais avec adaptation minimale (car StatCard original supprimé)
-  // On doit passer une icône LucideIcon, pas un ReactNode.
-
   const enAttente = feuilles.filter((f) => f.statut === 'SOUMIS').length
   const validees = feuilles.filter((f) => f.statut === 'VALIDE').length
   const rejetees = feuilles.filter((f) => f.statut === 'REJETE').length
@@ -244,7 +221,6 @@ const SuperviseurDashboard = () => {
         <StatCard title="Rejetées" value={rejetees} icon={XCircle} color="red-600" />
         <StatCard title="Heures Totales" value={heuresTotal} icon={Clock} color="blue-600" />
       </div>
-      {/* ... Table logique conservée si possible ou simplifiée ... */}
       <div className="bg-white rounded-lg shadow p-6">
         <p className="text-gray-500">Liste détaillée disponible dans l'onglet Feuilles.</p>
       </div>
@@ -257,7 +233,7 @@ const MonteurDashboard = () => {
   // ... (simplification pour MVP)
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold text- gray-900">Bienvenue, {user?.name || 'Monteur'}</h2>
+      <h2 className="text-xl font-semibold text- gray-900">Bienvenue, {user?.email || 'Monteur'}</h2>
       <div className="bg-white p-6 rounded-lg shadow">
         <p>Votre tableau de bord personnel est en cours de mise à jour.</p>
         <Link to="/feuilles" className="text-blue-600 hover:underline mt-2 inline-block">Voir mes feuilles d'heures</Link>
