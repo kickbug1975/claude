@@ -311,6 +311,8 @@ enum Role {
   DRIVER
   USER
   MODERATOR
+  SUPERVISEUR // Kept for backward compatibility with existing data
+  MONTEUR     // Kept for backward compatibility with existing data
 }
 
 enum MaintenanceRole {
