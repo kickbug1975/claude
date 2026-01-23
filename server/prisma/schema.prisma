@@ -112,7 +112,7 @@ model User {
   // Existing Relations
   Driver    Driver?
 
-  // New Relations for Maintenance App
+  // Restored Relations for Migration (will be removed later)
   monteurId String?   @unique
   monteur   Monteur?  @relation(fields: [monteurId], references: [id])
   refreshTokens RefreshToken[]
@@ -120,6 +120,48 @@ model User {
 }
 
 // --- New Models for Maintenance App ---
+
+model MaintenanceUser {
+  id        String          @id @default(uuid())
+  email     String          @unique
+  password  String
+  role      MaintenanceRole @default(MONTEUR)
+  nom       String?
+  prenom    String?
+  isActive  Boolean         @default(true)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  // Relations Maintenance
+  monteurId     String?                   @unique
+  monteur       Monteur?                  @relation(fields: [monteurId], references: [id])
+  refreshTokens MaintenanceRefreshToken[]
+  resetTokens   MaintenanceResetToken[]
+
+  @@map("maintenance_users")
+}
+
+model MaintenanceRefreshToken {
+  id                String          @id @default(uuid())
+  token             String          @unique
+  maintenanceUserId String
+  maintenanceUser   MaintenanceUser @relation(fields: [maintenanceUserId], references: [id], onDelete: Cascade)
+  expiresAt         DateTime
+  createdAt         DateTime        @default(now())
+
+  @@map("maintenance_refresh_tokens")
+}
+
+model MaintenanceResetToken {
+  id                String          @id @default(uuid())
+  token             String          @unique
+  maintenanceUserId String
+  maintenanceUser   MaintenanceUser @relation(fields: [maintenanceUserId], references: [id], onDelete: Cascade)
+  expiresAt         DateTime
+  createdAt         DateTime        @default(now())
+
+  @@map("maintenance_reset_tokens")
+}
 
 model Company {
   id             String   @id @default(uuid())
@@ -204,6 +246,8 @@ model Fichier {
   @@map("fichiers")
 }
 
+
+
 model Monteur {
   id                    String   @id @default(uuid())
   nom                   String
@@ -218,6 +262,7 @@ model Monteur {
   updatedAt             DateTime @updatedAt
   
   user                  User?
+  maintenanceUser       MaintenanceUser?
   feuilles              FeuilleTravail[]
 
   @@map("monteurs")
@@ -266,6 +311,10 @@ enum Role {
   DRIVER
   USER
   MODERATOR
+}
+
+enum MaintenanceRole {
+  ADMIN
   SUPERVISEUR
   MONTEUR
 }

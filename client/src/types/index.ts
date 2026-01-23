@@ -4,7 +4,10 @@ export interface User {
   id: string
   email: string
   role: 'ADMIN' | 'SUPERVISEUR' | 'MONTEUR'
+  nom?: string
+  prenom?: string
   monteurId?: string
+  isActive?: boolean
   createdAt: string
   updatedAt: string
 }

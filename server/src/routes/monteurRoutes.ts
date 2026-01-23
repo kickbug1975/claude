@@ -49,7 +49,7 @@ router.get('/:id', authenticate, async (req, res) => {
         const { id } = req.params;
         const monteur = await prisma.monteur.findUnique({
             where: { id },
-            include: { user: true },
+            include: { maintenanceUser: true },
         });
 
         if (!monteur) {

@@ -7,7 +7,7 @@ const router = Router();
 // Endpoint pour vérifier si l'application est configurée (admin créé)
 router.get('/status', async (req, res) => {
     try {
-        const userCount = await prisma.user.count();
+        const userCount = await prisma.maintenanceUser.count();
         const isSetup = userCount > 0;
 
         res.json({
@@ -64,7 +64,7 @@ router.put('/company', async (req, res) => {
 // Créer le compte admin initial
 router.post('/admin', async (req, res) => {
     try {
-        const userCount = await prisma.user.count();
+        const userCount = await prisma.maintenanceUser.count();
         if (userCount > 0) {
             return res.status(400).json({ success: false, message: 'Setup already completed' });
         }
@@ -73,11 +73,11 @@ router.post('/admin', async (req, res) => {
         const bcrypt = await import('bcryptjs'); // Dynamique import pour éviter dépendance circulaire si possible
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const user = await prisma.user.create({
+        const user = await prisma.maintenanceUser.create({
             data: {
                 email,
                 password: hashedPassword,
-                name,
+                nom: name, // Mapping name -> nom
                 role: 'ADMIN',
                 isActive: true
             }

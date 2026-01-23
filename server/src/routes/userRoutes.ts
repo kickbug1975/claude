@@ -1,18 +1,31 @@
 import { Router } from 'express';
 import { prisma } from '../config/prisma';
 import { authenticate } from '../middlewares/auth';
+import { z } from 'zod';
 
 const router = Router();
 
-// GET /api/users - Liste tous les utilisateurs
+// Validation schema for creating/updating users
+const userSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(6).optional(), // Optional for updates
+    role: z.enum(['ADMIN', 'SUPERVISEUR', 'MONTEUR']),
+    nom: z.string().optional(),
+    prenom: z.string().optional(),
+    monteurId: z.string().optional(),
+    isActive: z.boolean().optional(),
+});
+
+// GET /api/users - Liste tous les utilisateurs de maintenance
 router.get('/', authenticate, async (req, res) => {
     try {
-        const users = await prisma.user.findMany({
+        const users = await prisma.maintenanceUser.findMany({
             select: {
                 id: true,
                 email: true,
                 role: true,
-                name: true,
+                nom: true,
+                prenom: true,
                 isActive: true,
                 createdAt: true,
                 updatedAt: true,
@@ -32,13 +45,14 @@ router.get('/', authenticate, async (req, res) => {
 router.get('/:id', authenticate, async (req, res) => {
     try {
         const { id } = req.params;
-        const user = await prisma.user.findUnique({
-            where: { id: parseInt(id) },
+        const user = await prisma.maintenanceUser.findUnique({
+            where: { id },
             select: {
                 id: true,
                 email: true,
                 role: true,
-                name: true,
+                nom: true,
+                prenom: true,
                 isActive: true,
                 createdAt: true,
                 updatedAt: true,
@@ -60,20 +74,36 @@ router.get('/:id', authenticate, async (req, res) => {
 // POST /api/users - Crée un nouvel utilisateur
 router.post('/', authenticate, async (req, res) => {
     try {
+        const validation = userSchema.safeParse(req.body);
+        if (!validation.success) {
+            return res.status(400).json({
+                success: false,
+                message: 'Données invalides',
+                errors: validation.error.flatten().fieldErrors
+            });
+        }
+
         const { password, ...userData } = req.body;
+
+        if (!password) {
+            return res.status(400).json({ success: false, message: 'Mot de passe requis pour la création' });
+        }
+
         const bcrypt = await import('bcryptjs');
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const user = await prisma.user.create({
+        const user = await prisma.maintenanceUser.create({
             data: {
                 ...userData,
                 password: hashedPassword,
+                isActive: true
             },
             select: {
                 id: true,
                 email: true,
                 role: true,
-                name: true,
+                nom: true,
+                prenom: true,
                 isActive: true,
                 createdAt: true,
                 updatedAt: true,
@@ -82,6 +112,9 @@ router.post('/', authenticate, async (req, res) => {
 
         res.status(201).json({ success: true, data: user });
     } catch (error: any) {
+        if (error.code === 'P2002') {
+            return res.status(409).json({ success: false, message: 'Cet email est déjà utilisé' });
+        }
         res.status(500).json({ success: false, message: error.message });
     }
 });
@@ -98,14 +131,15 @@ router.patch('/:id', authenticate, async (req, res) => {
             updateData.password = await bcrypt.hash(password, 10);
         }
 
-        const user = await prisma.user.update({
-            where: { id: parseInt(id) },
+        const user = await prisma.maintenanceUser.update({
+            where: { id },
             data: updateData,
             select: {
                 id: true,
                 email: true,
                 role: true,
-                name: true,
+                nom: true,
+                prenom: true,
                 isActive: true,
                 createdAt: true,
                 updatedAt: true,
@@ -125,8 +159,8 @@ router.patch('/:id', authenticate, async (req, res) => {
 router.delete('/:id', authenticate, async (req, res) => {
     try {
         const { id } = req.params;
-        await prisma.user.delete({
-            where: { id: parseInt(id) },
+        await prisma.maintenanceUser.delete({
+            where: { id },
         });
 
         res.json({ success: true, message: 'Utilisateur supprimé' });

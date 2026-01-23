@@ -45,7 +45,8 @@ export const login = async (req: Request, res: Response) => {
 
         const { email, password } = validation.data;
 
-        const user = await prisma.user.findUnique({
+        // Use MaintenanceUser instead of User
+        const user = await prisma.maintenanceUser.findUnique({
             where: { email },
             include: { monteur: true },
         });
@@ -68,7 +69,7 @@ export const login = async (req: Request, res: Response) => {
 
         // Générer le token JWT (courte durée)
         const token = generateToken({
-            userId: user.id,
+            userId: user.id, // Now a UUID string
             email: user.email,
             role: user.role,
         });
@@ -114,7 +115,7 @@ export const register = async (req: Request, res: Response) => {
 
         const { email, password, role } = validation.data;
 
-        const existingUser = await prisma.user.findUnique({
+        const existingUser = await prisma.maintenanceUser.findUnique({
             where: { email },
         });
 
@@ -127,12 +128,13 @@ export const register = async (req: Request, res: Response) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const user = await prisma.user.create({
+        const user = await prisma.maintenanceUser.create({
             data: {
                 email,
                 password: hashedPassword,
                 role: role || 'MONTEUR',
-                name: email.split('@')[0], // Provide default name as required by schema
+                nom: email.split('@')[0],
+                isActive: true
             },
         });
 
@@ -175,8 +177,8 @@ export const me = async (req: Request, res: Response) => {
             });
         }
 
-        const user = await prisma.user.findUnique({
-            where: { id: Number(req.user.userId) }, // Cast to Number
+        const user = await prisma.maintenanceUser.findUnique({
+            where: { id: String(req.user.userId) }, // Verify UUID
             include: { monteur: true },
         });
 
@@ -277,7 +279,7 @@ export const logoutAll = async (req: Request, res: Response) => {
             });
         }
 
-        await revokeAllUserRefreshTokens(Number(req.user.userId));
+        await revokeAllUserRefreshTokens(String(req.user.userId));
 
         return res.status(200).json({
             success: true,
@@ -293,19 +295,15 @@ export const logoutAll = async (req: Request, res: Response) => {
 };
 
 export const forgotPassword = async (req: Request, res: Response) => {
-    // Placeholder skeleton as emailService is not yet confirmed/restored
-    // Logic from dist used EmailService which might be missing.
-    // For now, return success to avoid crashing, or implement if emailService is restored.
-    // Given the urgency of LOGGING IN, we can keep this minimal or stubbed.
-    // BUT, the dist code imported emailService.
+    // Placeholder
     return res.status(501).json({
         success: false,
-        message: 'Non implémenté (EmailService manquant)',
+        message: 'Non implémenté',
     });
 };
 
 export const resetPassword = async (req: Request, res: Response) => {
-    // Placeholder skeleton
+    // Placeholder
     return res.status(501).json({
         success: false,
         message: 'Non implémenté',
@@ -332,8 +330,9 @@ export const changePassword = async (req: Request, res: Response) => {
 
         const { oldPassword, newPassword } = validation.data;
 
-        const user = await prisma.user.findUnique({
-            where: { id: Number(req.user.userId) }, // Cast to Number
+        // Use MaintenanceUser
+        const user = await prisma.maintenanceUser.findUnique({
+            where: { id: String(req.user.userId) },
         });
 
         if (!user) {
@@ -354,7 +353,7 @@ export const changePassword = async (req: Request, res: Response) => {
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-        await prisma.user.update({
+        await prisma.maintenanceUser.update({
             where: { id: user.id },
             data: { password: hashedPassword },
         });

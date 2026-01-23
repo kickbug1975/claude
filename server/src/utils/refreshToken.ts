@@ -7,7 +7,7 @@ const REFRESH_TOKEN_EXPIRY_DAYS = 7;
 /**
  * Génère un nouveau refresh token pour un utilisateur
  */
-export const generateRefreshToken = async (userId: number): Promise<string> => {
+export const generateRefreshToken = async (userId: string): Promise<string> => {
     // Générer un token aléatoire sécurisé
     const token = randomBytes(64).toString('hex');
 
@@ -16,10 +16,10 @@ export const generateRefreshToken = async (userId: number): Promise<string> => {
     expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_EXPIRY_DAYS);
 
     // Sauvegarder le token dans la base de données
-    await prisma.refreshToken.create({
+    await prisma.maintenanceRefreshToken.create({
         data: {
             token,
-            userId,
+            maintenanceUserId: userId,
             expiresAt,
         },
     });
@@ -32,9 +32,9 @@ export const generateRefreshToken = async (userId: number): Promise<string> => {
  */
 export const validateRefreshToken = async (token: string) => {
     // Chercher le token dans la base de données
-    const refreshToken = await prisma.refreshToken.findUnique({
+    const refreshToken = await prisma.maintenanceRefreshToken.findUnique({
         where: { token },
-        include: { user: true },
+        include: { maintenanceUser: true },
     });
 
     if (!refreshToken) {
@@ -44,20 +44,20 @@ export const validateRefreshToken = async (token: string) => {
     // Vérifier si le token a expiré
     if (refreshToken.expiresAt < new Date()) {
         // Supprimer le token expiré
-        await prisma.refreshToken.delete({
+        await prisma.maintenanceRefreshToken.delete({
             where: { id: refreshToken.id },
         });
         throw new Error('Token de rafraîchissement expiré');
     }
 
-    return refreshToken.user;
+    return refreshToken.maintenanceUser;
 };
 
 /**
  * Révoque un refresh token spécifique
  */
 export const revokeRefreshToken = async (token: string): Promise<void> => {
-    await prisma.refreshToken.deleteMany({
+    await prisma.maintenanceRefreshToken.deleteMany({
         where: { token },
     });
 };
@@ -65,9 +65,9 @@ export const revokeRefreshToken = async (token: string): Promise<void> => {
 /**
  * Révoque tous les refresh tokens d'un utilisateur
  */
-export const revokeAllUserRefreshTokens = async (userId: number): Promise<void> => {
-    await prisma.refreshToken.deleteMany({
-        where: { userId },
+export const revokeAllUserRefreshTokens = async (userId: string): Promise<void> => {
+    await prisma.maintenanceRefreshToken.deleteMany({
+        where: { maintenanceUserId: userId },
     });
 };
 
@@ -75,7 +75,7 @@ export const revokeAllUserRefreshTokens = async (userId: number): Promise<void> 
  * Nettoie les refresh tokens expirés (à exécuter périodiquement)
  */
 export const cleanExpiredRefreshTokens = async (): Promise<number> => {
-    const result = await prisma.refreshToken.deleteMany({
+    const result = await prisma.maintenanceRefreshToken.deleteMany({
         where: {
             expiresAt: {
                 lt: new Date(),
@@ -88,10 +88,10 @@ export const cleanExpiredRefreshTokens = async (): Promise<number> => {
 /**
  * Obtient tous les refresh tokens actifs d'un utilisateur
  */
-export const getUserRefreshTokens = async (userId: number) => {
-    return await prisma.refreshToken.findMany({
+export const getUserRefreshTokens = async (userId: string) => {
+    return await prisma.maintenanceRefreshToken.findMany({
         where: {
-            userId,
+            maintenanceUserId: userId,
             expiresAt: {
                 gt: new Date(),
             },

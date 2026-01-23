@@ -6,7 +6,7 @@ declare global {
     namespace Express {
         interface Request {
             user?: {
-                userId: string | number;
+                userId: string | number; // Support both (migrated vs legacy)
                 email: string;
                 role: string;
             };
