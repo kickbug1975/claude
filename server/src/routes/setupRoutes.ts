@@ -11,10 +11,13 @@ router.get('/status', async (req, res) => {
         const isSetup = userCount > 0;
 
         res.json({
-            configured: isSetup, // Le frontend attend probablement 'configured' ou 'setup'
-            setup: isSetup,
-            maintenanceMode: false,
-            version: '1.0.0'
+            success: true,
+            data: {
+                isSetupComplete: isSetup,
+                configured: isSetup,
+                maintenanceMode: false,
+                version: '1.0.0'
+            }
         });
     } catch (error) {
         logger.error('Error checking setup status', error);
