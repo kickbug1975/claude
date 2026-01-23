@@ -9,6 +9,11 @@ import { prisma } from './config/prisma';
 import { generateCsrfToken } from './middlewares/csrf';
 import setupRoutes from './routes/setupRoutes';
 import authRoutes from './routes/authRoutes';
+import monteurRoutes from './routes/monteurRoutes';
+import userRoutes from './routes/userRoutes';
+import chantierRoutes from './routes/chantierRoutes';
+import feuilleRoutes from './routes/feuilleRoutes';
+import fichierRoutes from './routes/fichierRoutes';
 
 const app = express();
 const PORT = env.port;
@@ -38,6 +43,13 @@ app.use('/api/auth', authRoutes);
 // Setup Routes (handling both /setup and /api/setup/status depending on frontend)
 app.use('/setup', setupRoutes);
 app.use('/api/setup', setupRoutes);
+
+// Business Logic Routes
+app.use('/api/monteurs', monteurRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/chantiers', chantierRoutes);
+app.use('/api/feuilles', feuilleRoutes);
+app.use('/api/fichiers', fichierRoutes);
 
 // Health Check Route
 app.get('/health', async (req, res) => {
