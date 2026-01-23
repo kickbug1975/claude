@@ -14,6 +14,7 @@ import userRoutes from './routes/userRoutes';
 import chantierRoutes from './routes/chantierRoutes';
 import feuilleRoutes from './routes/feuilleRoutes';
 import fichierRoutes from './routes/fichierRoutes';
+import analyticsRoutes from './routes/analyticsRoutes';
 
 const app = express();
 const PORT = env.port;
@@ -52,6 +53,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/chantiers', chantierRoutes);
 app.use('/api/feuilles', feuilleRoutes);
 app.use('/api/fichiers', fichierRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Health Check Route
 app.get('/health', async (req, res) => {

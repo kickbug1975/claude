@@ -43,8 +43,11 @@ export interface FeuilleTravail {
   chantierId: string
   dateTravail: string
   dateSaisie: string
-  heureDebut: string
-  heureFin: string
+  heureDebut?: string
+  heureFin?: string
+  heuresMatin: number
+  heuresApresMidi: number
+  heuresDeplace: number
   heuresTotales: number
   descriptionTravail: string
   statut: 'BROUILLON' | 'SOUMIS' | 'VALIDE' | 'REJETE'
