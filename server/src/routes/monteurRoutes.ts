@@ -65,8 +65,13 @@ router.get('/:id', authenticate, async (req, res) => {
 // POST /api/monteurs - Crée un nouveau monteur
 router.post('/', authenticate, async (req, res) => {
     try {
+        const { dateEmbauche, ...rest } = req.body;
+
         const monteur = await prisma.monteur.create({
-            data: req.body,
+            data: {
+                ...rest,
+                dateEmbauche: dateEmbauche ? new Date(dateEmbauche) : new Date(),
+            },
         });
 
         res.status(201).json({ success: true, data: monteur });
@@ -79,9 +84,14 @@ router.post('/', authenticate, async (req, res) => {
 router.put('/:id', authenticate, async (req, res) => {
     try {
         const { id } = req.params;
+        const { dateEmbauche, ...rest } = req.body;
+
         const monteur = await prisma.monteur.update({
             where: { id },
-            data: req.body,
+            data: {
+                ...rest,
+                ...(dateEmbauche && { dateEmbauche: new Date(dateEmbauche) }),
+            },
         });
 
         res.json({ success: true, data: monteur });
