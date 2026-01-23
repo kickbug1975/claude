@@ -27,11 +27,11 @@ export default function ProdChart({ data }: ProdChartProps) {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis
                     dataKey="date"
-                    tickFormatter={(value) => new Date(value).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
+                    tickFormatter={(value: string) => new Date(value).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
                 />
                 <YAxis />
                 <Tooltip
-                    labelFormatter={(value) => new Date(value).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                    labelFormatter={(value: string) => new Date(value).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                 />
                 <Legend />
                 <Bar dataKey="travail" name="Heures Production" stackId="a" fill="#3b82f6" radius={[0, 0, 4, 4]} />
