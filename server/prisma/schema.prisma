@@ -121,6 +121,89 @@ model User {
 
 // --- New Models for Maintenance App ---
 
+model Company {
+  id             String   @id @default(uuid())
+  nom            String
+  adresse        String?
+  telephone      String?
+  email          String?
+  siret          String?
+  logoUrl        String?
+  primaryColor   String?  @default("#1a73e8")
+  secondaryColor String?  @default("#202124")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("company")
+}
+
+model Chantier {
+  id          String   @id @default(uuid())
+  nom         String
+  adresse     String
+  client      String
+  dateDebut   DateTime
+  dateFin     DateTime?
+  statut      StatutChantier @default(EN_COURS)
+  description String?
+  actif       Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  feuilles    FeuilleTravail[]
+
+  @@map("chantiers")
+}
+
+model FeuilleTravail {
+  id              String   @id @default(uuid())
+  chantierId      String
+  chantier        Chantier @relation(fields: [chantierId], references: [id])
+  monteurId       String
+  monteur         Monteur  @relation(fields: [monteurId], references: [id])
+  dateTravail     DateTime
+  heuresMatin     Float    @default(0)
+  heuresApresMidi Float    @default(0)
+  heuresDeplace   Float    @default(0)
+  statut          StatutFeuille @default(BROUILLON)
+  commentaire     String?
+  signature       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  frais           Frais[]
+  fichiers        Fichier[]
+
+  @@map("feuilles_travail")
+}
+
+model Frais {
+  id          String   @id @default(uuid())
+  feuilleId   String
+  feuille     FeuilleTravail @relation(fields: [feuilleId], references: [id], onDelete: Cascade)
+  type        TypeFrais
+  montant     Float
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("frais")
+}
+
+model Fichier {
+  id          String   @id @default(uuid())
+  feuilleId   String?
+  feuille     FeuilleTravail? @relation(fields: [feuilleId], references: [id], onDelete: Cascade)
+  nom         String
+  url         String
+  mimeType    String
+  taille      Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("fichiers")
+}
+
 model Monteur {
   id                    String   @id @default(uuid())
   nom                   String
@@ -135,6 +218,7 @@ model Monteur {
   updatedAt             DateTime @updatedAt
   
   user                  User?
+  feuilles              FeuilleTravail[]
 
   @@map("monteurs")
 }
@@ -205,4 +289,26 @@ enum Priority {
   MEDIUM
   HIGH
   URGENT
+}
+
+enum StatutChantier {
+  PREVU
+  EN_COURS
+  TERMINE
+  ANNULE
+}
+
+enum StatutFeuille {
+  BROUILLON
+  SOUMIS
+  VALIDE
+  REJETE
+}
+
+enum TypeFrais {
+  REPAS
+  HOTEL
+  PEAGE
+  CARBURANT
+  AUTRE
 }

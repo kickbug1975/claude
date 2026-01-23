@@ -27,10 +27,12 @@ app.use(morgan('combined', { stream: morganStream }));
 
 // Rate Limit
 const limiter = rateLimit({
-    windowMs: env.rateLimit.windowMs,
-    max: env.rateLimit.max,
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 300, // Augmenté à 300 par IP
     standardHeaders: true,
     legacyHeaders: false,
+    // Ne pas limiter les routes de setup qui sont appelées au démarrage
+    skip: (req) => req.path.includes('/setup') || req.path.includes('/auth/me')
 });
 app.use('/api', limiter);
 
