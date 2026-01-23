@@ -76,6 +76,7 @@ export const Wizard = () => {
                 if (response.data.isSetupComplete) {
                     navigate('/dashboard')
                 } else {
+                    // Only auto-advance to step 2 if authenticated and still on step 1
                     if (isAuthenticated && step === 1) {
                         setStep(2)
                         if (response.data.company) {
@@ -86,8 +87,6 @@ export const Wizard = () => {
                             setValue('email', response.data.company.email || '')
                             setValue('phone', response.data.company.phone || '')
                         }
-                    } else if (!isAuthenticated) {
-                        setStep(1)
                     }
                 }
             } catch (error: any) {
@@ -99,10 +98,12 @@ export const Wizard = () => {
             }
         }
 
-        if (isAuthenticated || step === 1) {
+        // Only fetch on mount or when authentication state changes
+        // Don't refetch when step changes to avoid infinite loop
+        if (!isAuthenticated || step === 1) {
             fetchSetupStatus()
         }
-    }, [navigate, showToast, isAuthenticated, step, setValue])
+    }, [navigate, showToast, isAuthenticated, setValue])
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
