@@ -32,13 +32,18 @@ function App() {
         console.error('Erreur lors de l\'initialisation du token CSRF:', error)
       }
 
+      console.log('App: initialCheck started')
       await initialCheck()
+      console.log('App: initialCheck done')
       await checkAuth()
+      console.log('App: checkAuth done, setting isReady')
       setIsReady(true)
     }
 
     initApp()
   }, [checkAuth, initialCheck])
+
+  console.log('App render: isReady=', isReady)
 
   if (!isReady) {
     return (
