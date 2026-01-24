@@ -61,6 +61,70 @@ router.get('/:id', authenticate, async (req, res) => {
     }
 });
 
+// GET /api/chantiers/:id/stats - Récupère les statistiques d'un chantier
+router.get('/:id/stats', authenticate, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Récupérer toutes les feuilles du chantier avec les infos nécessaires
+        const feuilles = await prisma.feuilleTravail.findMany({
+            where: { chantierId: id },
+            include: {
+                monteur: true,
+                frais: true
+            },
+            orderBy: { dateTravail: 'desc' }
+        });
+
+        // Calculer les statistiques
+        const nombreFeuilles = feuilles.length;
+
+        const heuresTotales = feuilles.reduce((acc, f) => {
+            const heures = (f.heuresMatin || 0) + (f.heuresApresMidi || 0) + (f.heuresDeplace || 0);
+            return acc + heures;
+        }, 0);
+
+        const fraisTotaux = feuilles.reduce((acc, f) => {
+            const fraisFeuille = f.frais.reduce((sum, fr) => sum + (fr.montant || 0), 0);
+            return acc + fraisFeuille;
+        }, 0);
+
+        // Compter les monteurs uniques
+        const monteursUniques = new Set(feuilles.map(f => f.monteurId));
+        const nombreMonteurs = monteursUniques.size;
+
+        // Préparer les feuilles récentes (5 dernières)
+        const feuillesRecentes = feuilles.slice(0, 5).map(f => {
+            const heures = (f.heuresMatin || 0) + (f.heuresApresMidi || 0) + (f.heuresDeplace || 0);
+            return {
+                id: f.id,
+                dateTravail: f.dateTravail,
+                heuresTotales: heures,
+                statut: f.statut,
+                monteur: {
+                    prenom: f.monteur?.prenom || 'Inconnu',
+                    nom: f.monteur?.nom || '',
+                    numeroIdentification: f.monteur?.numeroIdentification || '-'
+                }
+            };
+        });
+
+        res.json({
+            success: true,
+            data: {
+                heuresTotales,
+                nombreFeuilles,
+                fraisTotaux,
+                nombreMonteurs,
+                feuillesRecentes
+            }
+        });
+
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // POST /api/chantiers
 router.post('/', authenticate, async (req, res) => {
     try {
@@ -84,12 +148,22 @@ router.put('/:id', authenticate, async (req, res) => {
         const { id } = req.params;
         const data = req.body;
 
-        if (data.dateDebut) data.dateDebut = new Date(data.dateDebut);
-        if (data.dateFin) data.dateFin = new Date(data.dateFin);
+        // Filtrer les champs autorisés
+        const allowedFields = ['nom', 'reference', 'adresse', 'client', 'dateDebut', 'dateFin', 'statut', 'description', 'actif'];
+        const updateData: any = {};
+
+        Object.keys(data).forEach(key => {
+            if (allowedFields.includes(key)) {
+                updateData[key] = data[key];
+            }
+        });
+
+        if (updateData.dateDebut) updateData.dateDebut = new Date(updateData.dateDebut);
+        if (updateData.dateFin) updateData.dateFin = new Date(updateData.dateFin);
 
         const chantier = await prisma.chantier.update({
             where: { id },
-            data: data
+            data: updateData
         });
         res.json({ success: true, data: chantier });
     } catch (error: any) {
