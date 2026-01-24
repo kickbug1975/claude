@@ -15,6 +15,7 @@ import { ForgotPassword } from './pages/ForgotPassword'
 import { ResetPassword } from './pages/ResetPassword'
 import { Unauthorized } from './pages/Unauthorized'
 import { Settings } from './pages/Settings'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
 function App() {
   const [isReady, setIsReady] = useState(false)
@@ -47,80 +48,84 @@ function App() {
     )
   }
 
+
+
   return (
-    <ToastProvider>
-      <Router>
-        <Routes>
-          {/* Public routes */}
-          <Route
-            path="/login"
-            element={
-              isAuthenticated ? (
-                <Navigate to="/" replace />
-              ) : (
-                <Login />
-              )
-            }
-          />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/unauthorized" element={<Unauthorized />} />
+    <ErrorBoundary>
+      <ToastProvider>
+        <Router>
+          <Routes>
+            {/* Public routes */}
+            <Route
+              path="/login"
+              element={
+                isAuthenticated ? (
+                  <Navigate to="/" replace />
+                ) : (
+                  <Login />
+                )
+              }
+            />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/unauthorized" element={<Unauthorized />} />
 
-          {/* Root dynamic routing */}
-          <Route
-            path="/"
-            element={
-              isAuthenticated ? (
-                <ProtectedRoute>
-                  <Layout />
-                </ProtectedRoute>
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          >
-            <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="feuilles" element={<Feuilles />} />
+            {/* Root dynamic routing */}
             <Route
-              path="monteurs"
+              path="/"
               element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'SUPERVISEUR']}>
-                  <Monteurs />
-                </ProtectedRoute>
+                isAuthenticated ? (
+                  <ProtectedRoute>
+                    <Layout />
+                  </ProtectedRoute>
+                ) : (
+                  <Navigate to="/login" replace />
+                )
               }
-            />
-            <Route
-              path="chantiers"
-              element={
-                <ProtectedRoute allowedRoles={['ADMIN', 'SUPERVISEUR']}>
-                  <Chantiers />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="users"
-              element={
-                <ProtectedRoute allowedRoles={['ADMIN']}>
-                  <UserManagement />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="settings"
-              element={
-                <ProtectedRoute allowedRoles={['ADMIN']}>
-                  <Settings />
-                </ProtectedRoute>
-              }
-            />
-          </Route>
+            >
+              <Route index element={<Navigate to="/dashboard" replace />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="feuilles" element={<Feuilles />} />
+              <Route
+                path="monteurs"
+                element={
+                  <ProtectedRoute allowedRoles={['ADMIN', 'SUPERVISEUR']}>
+                    <Monteurs />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="chantiers"
+                element={
+                  <ProtectedRoute allowedRoles={['ADMIN', 'SUPERVISEUR']}>
+                    <Chantiers />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="users"
+                element={
+                  <ProtectedRoute allowedRoles={['ADMIN']}>
+                    <UserManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="settings"
+                element={
+                  <ProtectedRoute allowedRoles={['ADMIN']}>
+                    <Settings />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
 
-          {/* Catch all */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </Router>
-    </ToastProvider>
+            {/* Catch all */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </Router>
+      </ToastProvider>
+    </ErrorBoundary>
   )
 }
 
