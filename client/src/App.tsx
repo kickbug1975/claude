@@ -14,7 +14,6 @@ import { UserManagement } from './pages/UserManagement'
 import { ForgotPassword } from './pages/ForgotPassword'
 import { ResetPassword } from './pages/ResetPassword'
 import { Unauthorized } from './pages/Unauthorized'
-import { Wizard } from './pages/Wizard'
 import { Settings } from './pages/Settings'
 
 function App() {
