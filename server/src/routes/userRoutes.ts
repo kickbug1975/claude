@@ -193,6 +193,8 @@ router.patch('/:id', authenticate, async (req, res) => {
                 isActive: true,
                 createdAt: true,
                 updatedAt: true,
+                monteurId: true,
+                monteur: true,
             },
         });
 
