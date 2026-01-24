@@ -92,9 +92,15 @@ router.post('/', authenticate, async (req, res) => {
         const bcrypt = await import('bcryptjs');
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // Convert empty monteurId to undefined to avoid unique constraint issues
+        const cleanedData = {
+            ...userData,
+            monteurId: userData.monteurId || undefined,
+        };
+
         const user = await prisma.maintenanceUser.create({
             data: {
-                ...userData,
+                ...cleanedData,
                 password: hashedPassword,
                 isActive: true
             },
