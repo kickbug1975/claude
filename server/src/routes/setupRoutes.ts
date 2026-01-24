@@ -10,11 +10,24 @@ router.get('/status', async (req, res) => {
         const userCount = await prisma.maintenanceUser.count();
         const isSetup = userCount > 0;
 
+        // Count monteurs and chantiers for the frontend
+        const monteurCount = await prisma.monteur.count();
+        const chantierCount = await prisma.chantier.count();
+
+        // Get company info if exists
+        const company = await prisma.company.findFirst();
+
         res.json({
             success: true,
             data: {
                 isSetupComplete: isSetup,
                 configured: isSetup,
+                hasAdmin: userCount > 0,
+                counts: {
+                    monteurs: monteurCount,
+                    chantiers: chantierCount
+                },
+                company: company || null,
                 maintenanceMode: false,
                 version: '1.0.0'
             }
