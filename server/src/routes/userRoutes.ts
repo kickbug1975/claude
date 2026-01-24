@@ -175,7 +175,22 @@ router.patch('/:id', authenticate, async (req, res) => {
         const { id } = req.params;
         const { password, ...userData } = req.body;
 
-        const updateData: any = userData;
+        // Filtrer les champs pour ne garder que ceux du modèle MaintenanceUser
+        // Les champs comme telephone, adresse, etc. doivent être ignorés pour l'update user
+        const allowedFields = ['email', 'role', 'nom', 'prenom', 'isActive', 'monteurId'];
+        const updateData: any = {};
+
+        Object.keys(userData).forEach(key => {
+            if (allowedFields.includes(key)) {
+                updateData[key] = userData[key];
+            }
+        });
+
+        // Gérer explicitement monteurId vide/null
+        if (userData.monteurId === '' || userData.monteurId === 'null') {
+            updateData.monteurId = null;
+        }
+
         if (password) {
             const bcrypt = await import('bcryptjs');
             updateData.password = await bcrypt.hash(password, 10);

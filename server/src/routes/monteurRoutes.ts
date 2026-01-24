@@ -62,6 +62,91 @@ router.get('/:id', authenticate, async (req, res) => {
     }
 });
 
+// GET /api/monteurs/:id/stats - Récupère les statistiques d'un monteur
+router.get('/:id/stats', authenticate, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { mois, annee } = req.query;
+
+        // Construire le filtre de date
+        let dateFilter: any = {};
+        if (mois && annee) {
+            const startDate = new Date(Number(annee), Number(mois) - 1, 1);
+            const endDate = new Date(Number(annee), Number(mois), 0);
+            dateFilter = {
+                dateTravail: {
+                    gte: startDate,
+                    lte: endDate
+                }
+            };
+        } else if (annee) {
+            const startDate = new Date(Number(annee), 0, 1);
+            const endDate = new Date(Number(annee), 11, 31);
+            dateFilter = {
+                dateTravail: {
+                    gte: startDate,
+                    lte: endDate
+                }
+            };
+        }
+
+        // Récupérer les feuilles du monteur
+        const feuilles = await prisma.feuilleTravail.findMany({
+            where: {
+                monteurId: id,
+                ...dateFilter
+            },
+            include: {
+                chantier: true,
+                frais: true
+            },
+            orderBy: {
+                dateTravail: 'desc'
+            }
+        });
+
+        // Calculer les statistiques
+        const nombreFeuilles = feuilles.length;
+        const heuresTotales = feuilles.reduce((acc, f) => {
+            const heures = (f.heuresMatin || 0) + (f.heuresApresMidi || 0) + (f.heuresDeplace || 0);
+            return acc + heures;
+        }, 0);
+
+        const fraisTotaux = feuilles.reduce((acc, f) => {
+            const totalFraisFeuille = f.frais.reduce((sum, frais) => sum + (frais.montant || 0), 0);
+            return acc + totalFraisFeuille;
+        }, 0);
+
+        // Feuilles récentes (5 dernières)
+        const feuillesRecentes = feuilles.slice(0, 5).map(f => {
+            const heures = (f.heuresMatin || 0) + (f.heuresApresMidi || 0) + (f.heuresDeplace || 0);
+            return {
+                id: f.id,
+                dateTravail: f.dateTravail,
+                heuresTotales: heures,
+                statut: f.statut,
+                chantier: {
+                    nom: f.chantier?.nom || 'Inconnu',
+                    reference: (f.chantier as any)?.reference || '-'
+                }
+            };
+        });
+
+        res.json({
+            success: true,
+            data: {
+                heuresTotales,
+                nombreFeuilles,
+                fraisTotaux,
+                feuillesRecentes
+            }
+        });
+
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // POST /api/monteurs - Crée un nouveau monteur
 router.post('/', authenticate, async (req, res) => {
     try {
