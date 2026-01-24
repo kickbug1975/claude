@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { monteurService } from '../services/monteurService'
 import { Monteur, PaginationMeta } from '../types'
-import { Plus, Search, Phone, Mail, Loader2, Users } from 'lucide-react'
+import { Plus, Search, Phone, Mail, Loader2, Users, Archive, Trash2, RefreshCcw } from 'lucide-react'
 import { Modal } from '../components/Modal'
 import { MonteurForm } from '../components/MonteurForm'
 import { MonteurDetail } from '../components/MonteurDetail'
@@ -117,6 +117,54 @@ export const Monteurs = () => {
     }
   }
 
+  const handleArchive = async (monteur: Monteur) => {
+    try {
+      const newStatus = !monteur.actif
+      await monteurService.update(monteur.id, { actif: newStatus })
+      showToast(
+        `Monteur ${newStatus ? 'désarchivé' : 'archivé'} avec succès`,
+        'success'
+      )
+      await fetchData(pagination.page)
+    } catch (error: any) {
+      console.error('Erreur archivage:', error)
+      showToast("Erreur lors de l'archivage", 'error')
+    }
+  }
+
+  const handleDelete = async (monteur: Monteur) => {
+    if (
+      !window.confirm(
+        `Êtes-vous sûr de vouloir supprimer définitivement ${monteur.prenom} ${monteur.nom} ?\nCette action est irréversible.`
+      )
+    ) {
+      return
+    }
+
+    try {
+      await monteurService.delete(monteur.id)
+      showToast('Monteur supprimé avec succès', 'success')
+      await fetchData(pagination.page)
+    } catch (error: any) {
+      console.error('Erreur suppression:', error)
+      // Message spécifique si contrainte d'intégrité (P2003 de Prisma souvent mappé en 500 ou 400 par le backend)
+      const message = error.response?.data?.message || ''
+      if (
+        message.includes('constraint') ||
+        message.includes('Foreign key') ||
+        // Si le backend renvoie l'erreur brute Prisma
+        message.includes('P2003')
+      ) {
+        showToast(
+          'Impossible de supprimer ce monteur car il a des feuilles de travail associées. Veuillez l\'archiver à la place.',
+          'error'
+        )
+      } else {
+        showToast('Erreur lors de la suppression', 'error')
+      }
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -200,19 +248,39 @@ export const Monteurs = () => {
                     <p>Embauche le {formatDate(monteur.dateEmbauche)}</p>
                   </div>
 
-                  <div className="mt-4 flex gap-2">
-                    <button
-                      onClick={() => handleViewDetail(monteur)}
-                      className="flex-1 px-3 py-2 text-sm border rounded-lg hover:bg-gray-50"
-                    >
-                      Voir profil
-                    </button>
-                    <button
-                      onClick={() => handleOpenModal(monteur)}
-                      className="flex-1 px-3 py-2 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100"
-                    >
-                      Modifier
-                    </button>
+                  <div className="mt-4 flex flex-col gap-3">
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => handleArchive(monteur)}
+                        className={`p-2 text-sm border rounded-lg hover:bg-gray-50 ${!monteur.actif ? 'text-green-600' : 'text-orange-600'
+                          }`}
+                        title={monteur.actif ? 'Archiver' : 'Désarchiver'}
+                      >
+                        {monteur.actif ? <Archive size={16} /> : <RefreshCcw size={16} />}
+                      </button>
+                      <button
+                        onClick={() => handleDelete(monteur)}
+                        className="p-2 text-sm border border-red-200 text-red-600 rounded-lg hover:bg-red-50 hover:border-red-300"
+                        title="Supprimer définitivement"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleViewDetail(monteur)}
+                        className="flex-1 px-3 py-2 text-sm border rounded-lg hover:bg-gray-50"
+                      >
+                        Voir profil
+                      </button>
+                      <button
+                        onClick={() => handleOpenModal(monteur)}
+                        className="flex-1 px-3 py-2 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100"
+                      >
+                        Modifier
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -257,6 +325,6 @@ export const Monteurs = () => {
           />
         )}
       </Modal>
-    </div>
+    </div >
   )
 }
