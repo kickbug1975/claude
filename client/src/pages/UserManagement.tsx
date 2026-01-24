@@ -216,23 +216,34 @@ export const UserManagement = () => {
 // Composant Interne pour le formulaire (peut être extrait plus tard)
 const UserForm = ({ user, onSubmit, onCancel, isLoading }: { user?: AuthUser, onSubmit: (data: any) => void, onCancel: () => void, isLoading: boolean }) => {
     const [monteurs, setMonteurs] = useState<Monteur[]>([])
-    const { register, handleSubmit, formState: { errors } } = useForm({
+    const { register, handleSubmit, watch, formState: { errors } } = useForm({
         defaultValues: {
             email: user?.email || '',
             role: user?.role || 'MONTEUR',
             monteurId: user?.monteurId || '',
             password: '',
+            nom: user?.nom || '',
+            prenom: user?.prenom || '',
+            telephone: '',
+            adresse: '',
+            numeroIdentification: '',
+            dateEmbauche: new Date().toISOString().split('T')[0],
         }
     })
 
+    const selectedRole = watch('role')
+    const isMonteurRole = selectedRole === 'MONTEUR'
+
     useEffect(() => {
-        // Charger la liste des monteurs pour le select
-        import('../services/monteurService').then(({ monteurService }) => {
-            monteurService.getAll(true).then((res: any) => {
-                setMonteurs(res.data || res)
+        // Charger la liste des monteurs pour le select (seulement si mode édition)
+        if (user) {
+            import('../services/monteurService').then(({ monteurService }) => {
+                monteurService.getAll(true).then((res: any) => {
+                    setMonteurs(res.data || res)
+                })
             })
-        })
-    }, [])
+        }
+    }, [user])
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -250,6 +261,7 @@ const UserForm = ({ user, onSubmit, onCancel, isLoading }: { user?: AuthUser, on
                 <select
                     {...register('role', { required: 'Rôle requis' })}
                     className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    disabled={!!user}
                 >
                     <option value="ADMIN">ADMIN</option>
                     <option value="SUPERVISEUR">SUPERVISEUR</option>
@@ -257,18 +269,89 @@ const UserForm = ({ user, onSubmit, onCancel, isLoading }: { user?: AuthUser, on
                 </select>
             </div>
 
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Lier à un monteur (Optionnel)</label>
-                <select
-                    {...register('monteurId')}
-                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                    <option value="">-- Aucun --</option>
-                    {monteurs.map(m => (
-                        <option key={m.id} value={m.id}>{m.prenom} {m.nom} ({m.numeroIdentification})</option>
-                    ))}
-                </select>
-            </div>
+            {/* Show Monteur fields only when creating a new MONTEUR user */}
+            {isMonteurRole && !user && (
+                <>
+                    <div className="border-t pt-4">
+                        <h4 className="text-sm font-medium text-gray-700 mb-3">Informations du monteur</h4>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
+                                <input
+                                    {...register('nom', { required: isMonteurRole ? 'Nom requis' : false })}
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                />
+                                {errors.nom && <p className="text-red-500 text-xs mt-1">{errors.nom.message as string}</p>}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Prénom *</label>
+                                <input
+                                    {...register('prenom', { required: isMonteurRole ? 'Prénom requis' : false })}
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                />
+                                {errors.prenom && <p className="text-red-500 text-xs mt-1">{errors.prenom.message as string}</p>}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone *</label>
+                                <input
+                                    {...register('telephone', { required: isMonteurRole ? 'Téléphone requis' : false })}
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                />
+                                {errors.telephone && <p className="text-red-500 text-xs mt-1">{errors.telephone.message as string}</p>}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Numéro d'identification *</label>
+                                <input
+                                    {...register('numeroIdentification', { required: isMonteurRole ? 'Numéro requis' : false })}
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    placeholder="mtr-001"
+                                />
+                                {errors.numeroIdentification && <p className="text-red-500 text-xs mt-1">{errors.numeroIdentification.message as string}</p>}
+                            </div>
+                        </div>
+
+                        <div className="mt-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Adresse *</label>
+                            <input
+                                {...register('adresse', { required: isMonteurRole ? 'Adresse requise' : false })}
+                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                            />
+                            {errors.adresse && <p className="text-red-500 text-xs mt-1">{errors.adresse.message as string}</p>}
+                        </div>
+
+                        <div className="mt-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Date d'embauche</label>
+                            <input
+                                type="date"
+                                {...register('dateEmbauche')}
+                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {/* Show monteur linking only when editing existing user */}
+            {user && (
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Lier à un monteur (Optionnel)</label>
+                    <select
+                        {...register('monteurId')}
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="">-- Aucun --</option>
+                        {monteurs.map(m => (
+                            <option key={m.id} value={m.id}>{m.prenom} {m.nom} ({m.numeroIdentification})</option>
+                        ))}
+                    </select>
+                </div>
+            )}
 
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

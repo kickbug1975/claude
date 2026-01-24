@@ -16,6 +16,14 @@ const userSchema = z.object({
     isActive: z.boolean().optional(),
 });
 
+// Additional fields required when creating a MONTEUR user
+const monteurFieldsSchema = z.object({
+    telephone: z.string().min(1, 'Téléphone requis'),
+    adresse: z.string().min(1, 'Adresse requise'),
+    numeroIdentification: z.string().min(1, 'Numéro d\'identification requis'),
+    dateEmbauche: z.string().optional(),
+});
+
 // GET /api/users - Liste tous les utilisateurs de maintenance
 router.get('/', authenticate, async (req, res) => {
     try {
@@ -83,26 +91,60 @@ router.post('/', authenticate, async (req, res) => {
             });
         }
 
-        const { password, ...userData } = req.body;
+        const { password, role, email, nom, prenom, telephone, adresse, numeroIdentification, dateEmbauche, ...rest } = req.body;
 
         if (!password) {
             return res.status(400).json({ success: false, message: 'Mot de passe requis pour la création' });
         }
 
+        // If role is MONTEUR, validate additional fields
+        if (role === 'MONTEUR') {
+            const monteurValidation = monteurFieldsSchema.safeParse({ telephone, adresse, numeroIdentification, dateEmbauche });
+            if (!monteurValidation.success) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Champs monteur invalides',
+                    errors: monteurValidation.error.flatten().fieldErrors
+                });
+            }
+
+            if (!nom || !prenom) {
+                return res.status(400).json({ success: false, message: 'Nom et prénom requis pour un monteur' });
+            }
+        }
+
         const bcrypt = await import('bcryptjs');
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Convert empty monteurId to undefined to avoid unique constraint issues
-        const cleanedData = {
-            ...userData,
-            monteurId: userData.monteurId || undefined,
-        };
+        // If role is MONTEUR, create Monteur profile first, then link it
+        let monteurId: string | undefined = undefined;
+
+        if (role === 'MONTEUR') {
+            const monteur = await prisma.monteur.create({
+                data: {
+                    nom: nom!,
+                    prenom: prenom!,
+                    email,
+                    telephone,
+                    adresse,
+                    numeroIdentification,
+                    dateEmbauche: dateEmbauche ? new Date(dateEmbauche) : new Date(),
+                    actif: true,
+                },
+            });
+            monteurId = monteur.id;
+        }
 
         const user = await prisma.maintenanceUser.create({
             data: {
-                ...cleanedData,
+                email,
                 password: hashedPassword,
-                isActive: true
+                role,
+                nom,
+                prenom,
+                monteurId,
+                isActive: true,
+                ...rest,
             },
             select: {
                 id: true,
@@ -113,6 +155,8 @@ router.post('/', authenticate, async (req, res) => {
                 isActive: true,
                 createdAt: true,
                 updatedAt: true,
+                monteurId: true,
+                monteur: true,
             },
         });
 
