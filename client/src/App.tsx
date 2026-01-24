@@ -58,12 +58,12 @@ function App() {
           <Route
             path="/"
             element={
-              !isSetupComplete ? (
-                <Wizard />
-              ) : (
+              isAuthenticated ? (
                 <ProtectedRoute>
                   <Layout />
                 </ProtectedRoute>
+              ) : (
+                <Navigate to="/login" replace />
               )
             }
           >
