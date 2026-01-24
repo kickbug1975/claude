@@ -91,7 +91,7 @@ router.post('/', authenticate, async (req, res) => {
             });
         }
 
-        const { password, role, email, nom, prenom, telephone, adresse, numeroIdentification, dateEmbauche, ...rest } = req.body;
+        const { password, role, email, nom, prenom, telephone, adresse, numeroIdentification, dateEmbauche, monteurId: bodyMonteurId, ...rest } = req.body;
 
         if (!password) {
             return res.status(400).json({ success: false, message: 'Mot de passe requis pour la création' });
