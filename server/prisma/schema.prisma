@@ -182,6 +182,7 @@ model Company {
 model Chantier {
   id          String   @id @default(uuid())
   nom         String
+  reference   String   @default("")
   adresse     String
   client      String
   dateDebut   DateTime
