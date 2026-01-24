@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuthStore } from './store/authStore'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Layout } from './components/Layout'
@@ -17,20 +17,35 @@ import { Unauthorized } from './pages/Unauthorized'
 import { Settings } from './pages/Settings'
 
 function App() {
+  const [isReady, setIsReady] = useState(false)
   const checkAuth = useAuthStore((state) => state.checkAuth)
   const initialCheck = useAuthStore((state) => state.initialCheck)
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
-  const isSetupComplete = useAuthStore((state) => state.isSetupComplete)
 
   useEffect(() => {
-    // Initialiser le token CSRF au démarrage
-    fetchCsrfToken().catch((error) => {
-      console.error('Erreur lors de l\'initialisation du token CSRF:', error)
-    })
+    const initApp = async () => {
+      // Initialiser le token CSRF au démarrage
+      try {
+        await fetchCsrfToken()
+      } catch (error) {
+        console.error('Erreur lors de l\'initialisation du token CSRF:', error)
+      }
 
-    initialCheck()
-    checkAuth()
+      await initialCheck()
+      await checkAuth()
+      setIsReady(true)
+    }
+
+    initApp()
   }, [checkAuth, initialCheck])
+
+  if (!isReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
 
   return (
     <ToastProvider>
@@ -40,9 +55,7 @@ function App() {
           <Route
             path="/login"
             element={
-              !isSetupComplete ? (
-                <Navigate to="/" replace />
-              ) : isAuthenticated ? (
+              isAuthenticated ? (
                 <Navigate to="/" replace />
               ) : (
                 <Login />
