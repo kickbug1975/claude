@@ -208,6 +208,9 @@ model FeuilleTravail {
   heuresMatin     Float    @default(0)
   heuresApresMidi Float    @default(0)
   heuresDeplace   Float    @default(0)
+  heureDebut      String?  // HH:MM
+  heureFin        String?  // HH:MM
+  descriptionTravail String? // Description des travaux réalisés
   statut          StatutFeuille @default(BROUILLON)
   commentaire     String?
   signature       String?
