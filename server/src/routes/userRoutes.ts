@@ -117,47 +117,50 @@ router.post('/', authenticate, async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // If role is MONTEUR, create Monteur profile first, then link it
-        let monteurId: string | undefined = undefined;
+        // Transaction pour assurer que le Monteur et le User sont créés ensemble ou pas du tout
+        const user = await prisma.$transaction(async (tx) => {
+            let createdMonteurId: string | undefined = undefined;
 
-        if (role === 'MONTEUR') {
-            const monteur = await prisma.monteur.create({
+            if (role === 'MONTEUR') {
+                const monteur = await tx.monteur.create({
+                    data: {
+                        nom: nom!,
+                        prenom: prenom!,
+                        email,
+                        telephone,
+                        adresse,
+                        numeroIdentification,
+                        dateEmbauche: dateEmbauche ? new Date(dateEmbauche) : new Date(),
+                        actif: true,
+                    },
+                });
+                createdMonteurId = monteur.id;
+            }
+
+            return await tx.maintenanceUser.create({
                 data: {
-                    nom: nom!,
-                    prenom: prenom!,
                     email,
-                    telephone,
-                    adresse,
-                    numeroIdentification,
-                    dateEmbauche: dateEmbauche ? new Date(dateEmbauche) : new Date(),
-                    actif: true,
+                    password: hashedPassword,
+                    role,
+                    nom,
+                    prenom,
+                    monteurId: createdMonteurId,
+                    isActive: true,
+                    ...rest,
+                },
+                select: {
+                    id: true,
+                    email: true,
+                    role: true,
+                    nom: true,
+                    prenom: true,
+                    isActive: true,
+                    createdAt: true,
+                    updatedAt: true,
+                    monteurId: true,
+                    monteur: true,
                 },
             });
-            monteurId = monteur.id;
-        }
-
-        const user = await prisma.maintenanceUser.create({
-            data: {
-                email,
-                password: hashedPassword,
-                role,
-                nom,
-                prenom,
-                monteurId,
-                isActive: true,
-                ...rest,
-            },
-            select: {
-                id: true,
-                email: true,
-                role: true,
-                nom: true,
-                prenom: true,
-                isActive: true,
-                createdAt: true,
-                updatedAt: true,
-                monteurId: true,
-                monteur: true,
-            },
         });
 
         res.status(201).json({ success: true, data: user });
