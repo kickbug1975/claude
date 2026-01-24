@@ -86,8 +86,8 @@ export const useAuthStore = create<AuthState>()(
           error: null,
         })
 
-        // Rediriger vers la page de login
-        window.location.href = '/login'
+        // Redirection handled by App.tsx observing isAuthenticated state
+        // window.location.href = '/login'
       },
 
       refreshAccessToken: async () => {
