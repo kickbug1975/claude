@@ -519,8 +519,8 @@ const FeuilleDetail = ({ feuille, onClose, onRefresh, showToast, userRole }: Feu
               <tbody>
                 {feuille.frais.map((frais) => (
                   <tr key={frais.id} className="border-t">
-                    <td className="px-3 py-2">{frais.typeFrais}</td>
-                    <td className="px-3 py-2">{frais.description}</td>
+                    <td className="px-3 py-2">{frais.type}</td>
+                    <td className="px-3 py-2">{frais.description || '-'}</td>
                     <td className="px-3 py-2 text-right">{frais.montant.toFixed(2)} EUR</td>
                   </tr>
                 ))}

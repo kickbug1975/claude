@@ -36,7 +36,7 @@ router.get('/', authenticate, async (req, res) => {
                 include: {
                     monteur: { select: { nom: true, prenom: true } },
                     chantier: { select: { nom: true, client: true } },
-                    frais: { select: { id: true, type: true, montant: true } }, // Include frais data for total calculation
+                    frais: { select: { id: true, type: true, montant: true, description: true } }, // Include frais data for display
                     _count: { select: { fichiers: true } }
                 }
             }),
