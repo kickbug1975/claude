@@ -149,7 +149,7 @@ router.put('/:id', authenticate, async (req, res) => {
         const data = req.body;
 
         // Filtrer les champs autorisés
-        const allowedFields = ['nom', 'reference', 'adresse', 'client', 'dateDebut', 'dateFin', 'statut', 'description', 'actif'];
+        const allowedFields = ['nom', 'reference', 'adresse', 'client', 'dateDebut', 'dateFin', 'montantProvisionne', 'statut', 'description', 'actif'];
         const updateData: any = {};
 
         Object.keys(data).forEach(key => {
