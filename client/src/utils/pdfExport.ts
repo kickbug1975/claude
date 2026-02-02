@@ -215,10 +215,10 @@ export const exportFeuilleToPDF = async (feuille: FeuilleTravail, companyInfo?: 
 
     let totalFrais = 0
     feuille.frais.forEach((frais) => {
-      doc.text(frais.typeFrais, 25, y)
-      const fraisDesc = frais.description.length > 40
-        ? frais.description.substring(0, 40) + '...'
-        : frais.description
+      doc.text(frais.type, 25, y)
+      const fraisDesc = (frais.description || '').length > 40
+        ? (frais.description || '').substring(0, 40) + '...'
+        : (frais.description || '-')
       doc.text(fraisDesc, 70, y)
       doc.text(`${frais.montant.toFixed(2)} EUR`, pageWidth - 45, y)
       totalFrais += frais.montant

@@ -3,6 +3,20 @@ import { prisma } from '../config/prisma';
 import { authenticate } from '../middlewares/auth';
 import { logger } from '../utils/logger';
 
+// Helper to calculate hours between two time strings (HH:MM format)
+const calculateHours = (heureDebut?: string, heureFin?: string): number => {
+    if (!heureDebut || !heureFin) return 0;
+
+    const [startH, startM] = heureDebut.split(':').map(Number);
+    const [endH, endM] = heureFin.split(':').map(Number);
+
+    const startMinutes = startH * 60 + startM;
+    const endMinutes = endH * 60 + endM;
+
+    const diffMinutes = endMinutes - startMinutes;
+    return Math.max(0, diffMinutes / 60); // Return hours as decimal
+};
+
 const router = Router();
 
 // GET /api/feuilles
@@ -91,6 +105,11 @@ router.post('/', authenticate, async (req, res) => {
         // Conversion date
         if (data.dateTravail) data.dateTravail = new Date(data.dateTravail);
 
+        // Calculate heuresTotales if heureDebut and heureFin are provided
+        if (data.heureDebut && data.heureFin) {
+            data.heuresTotales = calculateHours(data.heureDebut, data.heureFin);
+        }
+
         // Transform frais: frontend sends 'typeFrais', backend expects 'type'
         const transformedFrais = frais?.map((f: any) => ({
             type: f.typeFrais || f.type, // Accept both field names
@@ -125,6 +144,11 @@ router.put('/:id', authenticate, async (req, res) => {
         const { frais, ...data } = req.body;
 
         if (data.dateTravail) data.dateTravail = new Date(data.dateTravail);
+
+        // Calculate heuresTotales if heureDebut and heureFin are provided
+        if (data.heureDebut && data.heureFin) {
+            data.heuresTotales = calculateHours(data.heureDebut, data.heureFin);
+        }
 
         // Transform frais: frontend sends 'typeFrais', backend expects 'type'
         const transformedFrais = frais?.map((f: any) => ({
