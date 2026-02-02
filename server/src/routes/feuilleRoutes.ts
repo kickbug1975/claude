@@ -121,20 +121,36 @@ router.post('/', authenticate, async (req, res) => {
 router.put('/:id', authenticate, async (req, res) => {
     try {
         const { id } = req.params;
-        const { frais, ...data } = req.body; // On ne gère pas les frais ici (endpoints dédiés ou logique complexe)
+        const { frais, ...data } = req.body;
 
         if (data.dateTravail) data.dateTravail = new Date(data.dateTravail);
 
+        // Transform frais: frontend sends 'typeFrais', backend expects 'type'
+        const transformedFrais = frais?.map((f: any) => ({
+            type: f.typeFrais || f.type,
+            montant: f.montant,
+            description: f.description
+        })).filter((f: any) => f.type && f.montant > 0);
+
+        // Update with frais handling: delete old and create new
         const feuille = await prisma.feuilleTravail.update({
             where: { id },
-            data: data,
+            data: {
+                ...data,
+                frais: transformedFrais?.length ? {
+                    deleteMany: {}, // Delete all existing frais
+                    create: transformedFrais // Create new frais
+                } : undefined
+            },
             include: {
                 frais: true
             }
         });
 
+        logger.info(`Feuille ${id} updated with ${feuille.frais?.length || 0} frais`);
         res.json({ success: true, data: feuille });
     } catch (error: any) {
+        logger.error('Error updating feuille', error);
         if (error.code === 'P2025') {
             return res.status(404).json({ success: false, message: 'Feuille non trouvée' });
         }
