@@ -366,4 +366,7 @@ enum TypeFrais {
   PEAGE
   CARBURANT
   AUTRE
+  TRANSPORT
+  MATERIEL
+  AUTRES
 }
