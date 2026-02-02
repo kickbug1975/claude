@@ -34,6 +34,7 @@ export interface Chantier {
   reference: string
   dateDebut: string
   dateFin?: string
+  montantProvisionne?: number
   description: string
   actif: boolean
   createdAt: string

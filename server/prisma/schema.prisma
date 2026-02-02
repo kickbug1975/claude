@@ -180,20 +180,21 @@ model Company {
 }
 
 model Chantier {
-  id          String   @id @default(uuid())
-  nom         String
-  reference   String   @default("")
-  adresse     String
-  client      String
-  dateDebut   DateTime
-  dateFin     DateTime?
-  statut      StatutChantier @default(EN_COURS)
-  description String?
-  actif       Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                 String          @id @default(uuid())
+  nom                String
+  reference          String          @default("")
+  adresse            String
+  client             String
+  dateDebut          DateTime
+  dateFin            DateTime?
+  montantProvisionne Decimal?        @db.Decimal(10, 2)
+  statut             StatutChantier  @default(EN_COURS)
+  description        String?
+  actif              Boolean         @default(true)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
   
-  feuilles    FeuilleTravail[]
+  feuilles           FeuilleTravail[]
 
   @@map("chantiers")
 }

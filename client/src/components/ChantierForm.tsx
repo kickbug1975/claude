@@ -9,6 +9,7 @@ interface ChantierFormData {
   reference: string
   dateDebut: string
   dateFin?: string
+  montantProvisionne?: number
   description: string
   actif: boolean
 }
@@ -28,19 +29,20 @@ export const ChantierForm = ({ chantier, onSubmit, onCancel, isLoading }: Chanti
   } = useForm<ChantierFormData>({
     defaultValues: chantier
       ? {
-          nom: chantier.nom,
-          adresse: chantier.adresse,
-          client: chantier.client,
-          reference: chantier.reference,
-          dateDebut: chantier.dateDebut.split('T')[0],
-          dateFin: chantier.dateFin ? chantier.dateFin.split('T')[0] : '',
-          description: chantier.description,
-          actif: chantier.actif,
-        }
+        nom: chantier.nom,
+        adresse: chantier.adresse,
+        client: chantier.client,
+        reference: chantier.reference,
+        dateDebut: chantier.dateDebut.split('T')[0],
+        dateFin: chantier.dateFin ? chantier.dateFin.split('T')[0] : '',
+        montantProvisionne: chantier.montantProvisionne,
+        description: chantier.description,
+        actif: chantier.actif,
+      }
       : {
-          actif: true,
-          dateDebut: new Date().toISOString().split('T')[0],
-        },
+        actif: true,
+        dateDebut: new Date().toISOString().split('T')[0],
+      },
   })
 
   return (
@@ -53,9 +55,8 @@ export const ChantierForm = ({ chantier, onSubmit, onCancel, isLoading }: Chanti
           <input
             type="text"
             {...register('nom', { required: 'Nom requis' })}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.nom ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.nom ? 'border-red-500' : 'border-gray-300'
+              }`}
           />
           {errors.nom && (
             <p className="mt-1 text-sm text-red-600">{errors.nom.message}</p>
@@ -69,9 +70,8 @@ export const ChantierForm = ({ chantier, onSubmit, onCancel, isLoading }: Chanti
           <input
             type="text"
             {...register('reference', { required: 'Reference requise' })}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.reference ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.reference ? 'border-red-500' : 'border-gray-300'
+              }`}
             placeholder="CHT-001"
           />
           {errors.reference && (
@@ -87,9 +87,8 @@ export const ChantierForm = ({ chantier, onSubmit, onCancel, isLoading }: Chanti
         <input
           type="text"
           {...register('client', { required: 'Client requis' })}
-          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-            errors.client ? 'border-red-500' : 'border-gray-300'
-          }`}
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.client ? 'border-red-500' : 'border-gray-300'
+            }`}
         />
         {errors.client && (
           <p className="mt-1 text-sm text-red-600">{errors.client.message}</p>
@@ -103,13 +102,30 @@ export const ChantierForm = ({ chantier, onSubmit, onCancel, isLoading }: Chanti
         <input
           type="text"
           {...register('adresse', { required: 'Adresse requise' })}
-          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-            errors.adresse ? 'border-red-500' : 'border-gray-300'
-          }`}
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.adresse ? 'border-red-500' : 'border-gray-300'
+            }`}
         />
         {errors.adresse && (
           <p className="mt-1 text-sm text-red-600">{errors.adresse.message}</p>
         )}
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Montant Provisionné (Budget)
+        </label>
+        <div className="relative">
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            {...register('montantProvisionne', { valueAsNumber: true })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="5000.00"
+          />
+          <span className="absolute right-3 top-2 text-gray-500">EUR</span>
+        </div>
+        <p className="mt-1 text-xs text-gray-500">Montant du devis pour ce chantier</p>
       </div>
 
       <div>
@@ -119,9 +135,8 @@ export const ChantierForm = ({ chantier, onSubmit, onCancel, isLoading }: Chanti
         <textarea
           {...register('description', { required: 'Description requise' })}
           rows={3}
-          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-            errors.description ? 'border-red-500' : 'border-gray-300'
-          }`}
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.description ? 'border-red-500' : 'border-gray-300'
+            }`}
         />
         {errors.description && (
           <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
@@ -136,9 +151,8 @@ export const ChantierForm = ({ chantier, onSubmit, onCancel, isLoading }: Chanti
           <input
             type="date"
             {...register('dateDebut', { required: 'Date requise' })}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.dateDebut ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.dateDebut ? 'border-red-500' : 'border-gray-300'
+              }`}
           />
           {errors.dateDebut && (
             <p className="mt-1 text-sm text-red-600">{errors.dateDebut.message}</p>
