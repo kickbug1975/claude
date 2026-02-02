@@ -6,19 +6,19 @@ import { chantierService } from '../services/chantierService'
 import { Loader2, Save, Plus, Trash2 } from 'lucide-react'
 
 interface FraisFormData {
-  typeFrais: 'TRANSPORT' | 'MATERIEL' | 'REPAS' | 'AUTRES'
-  montant: number
-  description: string
+  typeFrais?: 'TRANSPORT' | 'MATERIEL' | 'REPAS' | 'AUTRES' | 'HOTEL' | 'PEAGE' | 'CARBURANT' | 'AUTRE'
+  montant?: number
+  description?: string
 }
 
 interface FeuilleFormData {
-  monteurId: string
-  chantierId: string
-  dateTravail: string
-  heureDebut: string
-  heureFin: string
-  descriptionTravail: string
-  frais: FraisFormData[]
+  monteurId?: string
+  chantierId?: string
+  dateTravail?: string
+  heureDebut?: string
+  heureFin?: string
+  descriptionTravail?: string
+  frais?: FraisFormData[]
 }
 
 interface FeuilleFormProps {
