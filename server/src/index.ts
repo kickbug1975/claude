@@ -19,6 +19,9 @@ import analyticsRoutes from './routes/analyticsRoutes';
 const app = express();
 const PORT = env.port;
 
+// Trust proxy for Render deployment (reverse proxy)
+app.set('trust proxy', 1);
+
 // Middlewares
 app.use(helmet());
 app.use(cors({ origin: env.clientUrl === '*' ? true : env.clientUrl, credentials: true }));
