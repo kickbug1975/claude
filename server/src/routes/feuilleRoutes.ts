@@ -36,7 +36,8 @@ router.get('/', authenticate, async (req, res) => {
                 include: {
                     monteur: { select: { nom: true, prenom: true } },
                     chantier: { select: { nom: true, client: true } },
-                    _count: { select: { frais: true, fichiers: true } }
+                    frais: { select: { id: true, type: true, montant: true } }, // Include frais data for total calculation
+                    _count: { select: { fichiers: true } }
                 }
             }),
             prisma.feuilleTravail.count({ where })
