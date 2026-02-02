@@ -67,9 +67,9 @@ export interface FeuilleTravail {
 export interface Frais {
   id: string
   feuilleId: string
-  typeFrais: 'TRANSPORT' | 'MATERIEL' | 'REPAS' | 'AUTRES'
+  type: 'TRANSPORT' | 'MATERIEL' | 'REPAS' | 'AUTRES' | 'REPAS' | 'HOTEL' | 'PEAGE' | 'CARBURANT' | 'AUTRE'
   montant: number
-  description: string
+  description?: string
   fichierProuve?: string
   createdAt: string
 }
