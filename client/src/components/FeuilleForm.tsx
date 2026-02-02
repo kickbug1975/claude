@@ -49,24 +49,24 @@ export const FeuilleForm = ({ feuille, onSubmit, onCancel, isLoading }: FeuilleF
   } = useForm<FeuilleFormData>({
     defaultValues: feuille
       ? {
-          monteurId: feuille.monteurId,
-          chantierId: feuille.chantierId,
-          dateTravail: feuille.dateTravail.split('T')[0],
-          heureDebut: feuille.heureDebut,
-          heureFin: feuille.heureFin,
-          descriptionTravail: feuille.descriptionTravail,
-          frais: feuille.frais?.map((f) => ({
-            typeFrais: f.typeFrais,
-            montant: f.montant,
-            description: f.description,
-          })) || [],
-        }
+        monteurId: feuille.monteurId,
+        chantierId: feuille.chantierId,
+        dateTravail: feuille.dateTravail.split('T')[0],
+        heureDebut: feuille.heureDebut,
+        heureFin: feuille.heureFin,
+        descriptionTravail: feuille.descriptionTravail,
+        frais: feuille.frais?.map((f) => ({
+          typeFrais: f.type,
+          montant: f.montant,
+          description: f.description,
+        })) || [],
+      }
       : {
-          dateTravail: new Date().toISOString().split('T')[0],
-          heureDebut: '08:00',
-          heureFin: '17:00',
-          frais: [],
-        },
+        dateTravail: new Date().toISOString().split('T')[0],
+        heureDebut: '08:00',
+        heureFin: '17:00',
+        frais: [],
+      },
   })
 
   const { fields, append, remove } = useFieldArray({
@@ -117,9 +117,8 @@ export const FeuilleForm = ({ feuille, onSubmit, onCancel, isLoading }: FeuilleF
           </label>
           <select
             {...register('monteurId', { required: 'Monteur requis' })}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.monteurId ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.monteurId ? 'border-red-500' : 'border-gray-300'
+              }`}
             disabled={!!feuille}
           >
             <option value="">Selectionner un monteur</option>
@@ -140,9 +139,8 @@ export const FeuilleForm = ({ feuille, onSubmit, onCancel, isLoading }: FeuilleF
           </label>
           <select
             {...register('chantierId', { required: 'Chantier requis' })}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.chantierId ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.chantierId ? 'border-red-500' : 'border-gray-300'
+              }`}
           >
             <option value="">Selectionner un chantier</option>
             {chantiers.map((c) => (
@@ -165,9 +163,8 @@ export const FeuilleForm = ({ feuille, onSubmit, onCancel, isLoading }: FeuilleF
           <input
             type="date"
             {...register('dateTravail', { required: 'Date requise' })}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.dateTravail ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.dateTravail ? 'border-red-500' : 'border-gray-300'
+              }`}
           />
           {errors.dateTravail && (
             <p className="mt-1 text-sm text-red-600">{errors.dateTravail.message}</p>
@@ -181,9 +178,8 @@ export const FeuilleForm = ({ feuille, onSubmit, onCancel, isLoading }: FeuilleF
           <input
             type="time"
             {...register('heureDebut', { required: 'Heure requise' })}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.heureDebut ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.heureDebut ? 'border-red-500' : 'border-gray-300'
+              }`}
           />
           {errors.heureDebut && (
             <p className="mt-1 text-sm text-red-600">{errors.heureDebut.message}</p>
@@ -197,9 +193,8 @@ export const FeuilleForm = ({ feuille, onSubmit, onCancel, isLoading }: FeuilleF
           <input
             type="time"
             {...register('heureFin', { required: 'Heure requise' })}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.heureFin ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.heureFin ? 'border-red-500' : 'border-gray-300'
+              }`}
           />
           {errors.heureFin && (
             <p className="mt-1 text-sm text-red-600">{errors.heureFin.message}</p>
@@ -214,9 +209,8 @@ export const FeuilleForm = ({ feuille, onSubmit, onCancel, isLoading }: FeuilleF
         <textarea
           {...register('descriptionTravail', { required: 'Description requise' })}
           rows={3}
-          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-            errors.descriptionTravail ? 'border-red-500' : 'border-gray-300'
-          }`}
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.descriptionTravail ? 'border-red-500' : 'border-gray-300'
+            }`}
           placeholder="Decrivez les travaux effectues..."
         />
         {errors.descriptionTravail && (
