@@ -90,12 +90,19 @@ router.post('/', authenticate, async (req, res) => {
         // Conversion date
         if (data.dateTravail) data.dateTravail = new Date(data.dateTravail);
 
+        // Transform frais: frontend sends 'typeFrais', backend expects 'type'
+        const transformedFrais = frais?.map((f: any) => ({
+            type: f.typeFrais || f.type, // Accept both field names
+            montant: f.montant,
+            description: f.description
+        }));
+
         // Création avec frais imbriqués
         const feuille = await prisma.feuilleTravail.create({
             data: {
                 ...data,
-                frais: frais ? {
-                    create: frais
+                frais: transformedFrais?.length ? {
+                    create: transformedFrais
                 } : undefined
             },
             include: {
