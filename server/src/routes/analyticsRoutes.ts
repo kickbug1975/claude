@@ -26,12 +26,9 @@ router.get('/summary', authenticate, async (req, res) => {
         });
 
         // 3. Heures travaillées ce mois (Productivité)
-        // Prisma aggregate pour sommer les heures
-        const heuresMount = await prisma.feuilleTravail.aggregate({
+        const heuresMonth = await prisma.feuilleTravail.aggregate({
             _sum: {
-                heuresMatin: true,
-                heuresApresMidi: true,
-                heuresDeplace: true
+                heuresTotales: true
             },
             where: {
                 dateTravail: {
@@ -41,10 +38,7 @@ router.get('/summary', authenticate, async (req, res) => {
             }
         });
 
-        const totalHeures = (heuresMount._sum.heuresMatin || 0) +
-            (heuresMount._sum.heuresApresMidi || 0);
-
-        const totalDeplacement = heuresMount._sum.heuresDeplace || 0;
+        const totalHeures = heuresMonth._sum.heuresTotales || 0;
 
         // 4. Marge Estimée (Simulation simplifiée pour version 1)
         // Hypothèse: Facturation 65€/h, Coût Monteur 35€/h, Frais réels
@@ -59,7 +53,7 @@ router.get('/summary', authenticate, async (req, res) => {
         });
 
         const chiffreAffaires = totalHeures * 65;
-        const coutMainOeuvre = (totalHeures + totalDeplacement) * 35; // On paie aussi le déplacement
+        const coutMainOeuvre = totalHeures * 35;
         const coutFrais = fraisMonth._sum.montant || 0;
         const marge = chiffreAffaires - coutMainOeuvre - coutFrais;
 
@@ -98,9 +92,7 @@ router.get('/hours', authenticate, async (req, res) => {
             },
             select: {
                 dateTravail: true,
-                heuresMatin: true,
-                heuresApresMidi: true,
-                heuresDeplace: true
+                heuresTotales: true
             },
             orderBy: { dateTravail: 'asc' }
         });
@@ -109,10 +101,9 @@ router.get('/hours', authenticate, async (req, res) => {
         const dailyData = feuilles.reduce((acc: Record<string, any>, feuille) => {
             const dateKey = feuille.dateTravail.toISOString().split('T')[0];
             if (!acc[dateKey]) {
-                acc[dateKey] = { date: dateKey, travail: 0, deplacement: 0 };
+                acc[dateKey] = { date: dateKey, travail: 0 };
             }
-            acc[dateKey].travail += (feuille.heuresMatin + feuille.heuresApresMidi);
-            acc[dateKey].deplacement += feuille.heuresDeplace;
+            acc[dateKey].travail += (feuille.heuresTotales || 0);
             return acc;
         }, {});
 
@@ -138,15 +129,14 @@ router.get('/performance', authenticate, async (req, res) => {
         const feuilles = await prisma.feuilleTravail.groupBy({
             by: ['monteurId'],
             _sum: {
-                heuresMatin: true,
-                heuresApresMidi: true
+                heuresTotales: true
             },
             where: {
                 dateTravail: { gte: startOfMonth }
             },
             orderBy: {
                 _sum: {
-                    heuresMatin: 'desc' // Tri approximatif, on affinera en JS
+                    heuresTotales: 'desc'
                 }
             },
             take: 10
@@ -159,7 +149,7 @@ router.get('/performance', authenticate, async (req, res) => {
                 select: { nom: true, prenom: true }
             });
 
-            const totalHeures = (f._sum.heuresMatin || 0) + (f._sum.heuresApresMidi || 0);
+            const totalHeures = f._sum.heuresTotales || 0;
 
             return {
                 monteurId: f.monteurId,

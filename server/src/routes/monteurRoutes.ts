@@ -108,8 +108,7 @@ router.get('/:id/stats', authenticate, async (req, res) => {
         // Calculer les statistiques
         const nombreFeuilles = feuilles.length;
         const heuresTotales = feuilles.reduce((acc, f) => {
-            const heures = (f.heuresMatin || 0) + (f.heuresApresMidi || 0) + (f.heuresDeplace || 0);
-            return acc + heures;
+            return acc + (f.heuresTotales || 0);
         }, 0);
 
         const fraisTotaux = feuilles.reduce((acc, f) => {
@@ -119,11 +118,10 @@ router.get('/:id/stats', authenticate, async (req, res) => {
 
         // Feuilles récentes (5 dernières)
         const feuillesRecentes = feuilles.slice(0, 5).map(f => {
-            const heures = (f.heuresMatin || 0) + (f.heuresApresMidi || 0) + (f.heuresDeplace || 0);
             return {
                 id: f.id,
                 dateTravail: f.dateTravail,
-                heuresTotales: heures,
+                heuresTotales: f.heuresTotales || 0,
                 statut: f.statut,
                 chantier: {
                     nom: f.chantier?.nom || 'Inconnu',
