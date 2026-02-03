@@ -105,11 +105,6 @@ router.post('/', authenticate, async (req, res) => {
         // Conversion date
         if (data.dateTravail) data.dateTravail = new Date(data.dateTravail);
 
-        // Calculate heuresTotales if heureDebut and heureFin are provided
-        if (data.heureDebut && data.heureFin) {
-            data.heuresTotales = calculateHours(data.heureDebut, data.heureFin);
-        }
-
         // Transform frais: frontend sends 'typeFrais', backend expects 'type'
         const transformedFrais = frais?.map((f: any) => ({
             type: f.typeFrais || f.type, // Accept both field names
