@@ -210,7 +210,7 @@ const SuperviseurDashboard = () => {
   const enAttente = feuilles.filter((f) => f.statut === 'SOUMIS').length
   const validees = feuilles.filter((f) => f.statut === 'VALIDE').length
   const rejetees = feuilles.filter((f) => f.statut === 'REJETE').length
-  const heuresTotal = feuilles.reduce((acc, f) => acc + (f.heuresMatin + f.heuresApresMidi), 0)
+  const heuresTotal = feuilles.reduce((acc, f) => acc + (f.heuresTotales || 0), 0)
 
   if (loading) {
     return (
