@@ -223,7 +223,7 @@ export const Settings = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-4">
                             <p className="text-sm font-semibold text-slate-700">Logo de l'application</p>
-                            <div className="relative h-48 rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center bg-slate-50 overflow-hidden">
+                            <div className="relative h-48 rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center bg-slate-50 overflow-hidden group">
                                 {companyLogo ? (
                                     <img src={URL.createObjectURL(companyLogo)} className="max-h-full" alt="New logo" />
                                 ) : companyLogoUrl ? (
@@ -231,17 +231,23 @@ export const Settings = () => {
                                 ) : (
                                     <ImageIcon className="text-slate-300" size={48} />
                                 )}
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    className="absolute inset-0 opacity-0 cursor-pointer"
-                                    onChange={(e) => e.target.files && setCompanyLogo(e.target.files[0])}
-                                />
+                                <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                                    <div className="flex flex-col items-center gap-2 text-white">
+                                        <Upload size={32} />
+                                        <span className="text-sm font-semibold">Choisir un fichier</span>
+                                    </div>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => e.target.files && setCompanyLogo(e.target.files[0])}
+                                    />
+                                </label>
                             </div>
                         </div>
                         <div className="space-y-4">
                             <p className="text-sm font-semibold text-slate-700">Logo de connexion</p>
-                            <div className="relative h-48 rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center bg-slate-50 overflow-hidden">
+                            <div className="relative h-48 rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center bg-slate-50 overflow-hidden group">
                                 {loginLogo ? (
                                     <img src={URL.createObjectURL(loginLogo)} className="max-h-full" alt="New logo" />
                                 ) : loginLogoUrl ? (
@@ -249,12 +255,18 @@ export const Settings = () => {
                                 ) : (
                                     <ImageIcon className="text-slate-300" size={48} />
                                 )}
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    className="absolute inset-0 opacity-0 cursor-pointer"
-                                    onChange={(e) => e.target.files && setLoginLogo(e.target.files[0])}
-                                />
+                                <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                                    <div className="flex flex-col items-center gap-2 text-white">
+                                        <Upload size={32} />
+                                        <span className="text-sm font-semibold">Choisir un fichier</span>
+                                    </div>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => e.target.files && setLoginLogo(e.target.files[0])}
+                                    />
+                                </label>
                             </div>
                         </div>
                     </div>
