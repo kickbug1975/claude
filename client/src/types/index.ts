@@ -49,10 +49,7 @@ export interface FeuilleTravail {
   dateSaisie: string
   heureDebut?: string
   heureFin?: string
-  heuresMatin: number
-  heuresApresMidi: number
-  heuresDeplace: number
-  heuresTotales: number
+  heuresTotales?: number  // Calculated: (heureFin - heureDebut) - 1h lunch
   descriptionTravail: string
   statut: 'BROUILLON' | 'SOUMIS' | 'VALIDE' | 'REJETE'
   validePar?: string

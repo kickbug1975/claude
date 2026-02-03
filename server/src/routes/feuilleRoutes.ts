@@ -4,6 +4,7 @@ import { authenticate } from '../middlewares/auth';
 import { logger } from '../utils/logger';
 
 // Helper to calculate hours between two time strings (HH:MM format)
+// Automatically subtracts 1 hour for lunch break
 const calculateHours = (heureDebut?: string, heureFin?: string): number => {
     if (!heureDebut || !heureFin) return 0;
 
@@ -14,7 +15,10 @@ const calculateHours = (heureDebut?: string, heureFin?: string): number => {
     const endMinutes = endH * 60 + endM;
 
     const diffMinutes = endMinutes - startMinutes;
-    return Math.max(0, diffMinutes / 60); // Return hours as decimal
+    const totalHours = diffMinutes / 60;
+
+    // Subtract 1 hour for lunch break
+    return Math.max(0, totalHours - 1);
 };
 
 const router = Router();
@@ -104,6 +108,11 @@ router.post('/', authenticate, async (req, res) => {
 
         // Conversion date
         if (data.dateTravail) data.dateTravail = new Date(data.dateTravail);
+
+        // Calculate heuresTotales if heureDebut and heureFin are provided
+        if (data.heureDebut && data.heureFin) {
+            data.heuresTotales = calculateHours(data.heureDebut, data.heureFin);
+        }
 
         // Transform frais: frontend sends 'typeFrais', backend expects 'type'
         const transformedFrais = frais?.map((f: any) => ({
